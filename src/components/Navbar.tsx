@@ -44,7 +44,12 @@ const Navbar = () => {
             >
               Professionals
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-600">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-gray-600"
+              onClick={() => navigate("/auth/login")}
+            >
               <User className="h-4 w-4 mr-2" />
               Login
             </Button>
@@ -95,7 +100,15 @@ const Navbar = () => {
               >
                 Professionals
               </Button>
-              <Button variant="ghost" size="sm" className="text-gray-600 justify-start">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 justify-start"
+                onClick={() => {
+                  navigate("/auth/login");
+                  setIsOpen(false);
+                }}
+              >
                 <User className="h-4 w-4 mr-2" />
                 Login
               </Button>
