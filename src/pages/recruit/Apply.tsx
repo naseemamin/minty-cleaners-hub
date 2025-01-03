@@ -23,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -56,23 +57,25 @@ const Apply = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // First, try to insert directly into cleaner_profiles
+      // Create the insert data with proper typing
+      const insertData: TablesInsert<"cleaner_profiles"> = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        mobile_number: values.mobile_number,
+        email: values.email,
+        gender: values.gender,
+        postcode: values.postcode,
+        years_experience: values.years_experience,
+        cleaning_types: values.cleaning_types,
+        experience_description: values.experience_description,
+        desired_hours_per_week: values.desired_hours_per_week,
+        available_days: values.available_days,
+        commitment_length: values.commitment_length,
+      };
+
       const { data: profileData, error: profileError } = await supabase
         .from('cleaner_profiles')
-        .insert([{
-          first_name: values.first_name,
-          last_name: values.last_name,
-          mobile_number: values.mobile_number,
-          email: values.email,
-          gender: values.gender,
-          postcode: values.postcode,
-          years_experience: values.years_experience,
-          cleaning_types: values.cleaning_types,
-          experience_description: values.experience_description,
-          desired_hours_per_week: values.desired_hours_per_week,
-          available_days: values.available_days,
-          commitment_length: values.commitment_length,
-        }])
+        .insert(insertData)
         .select();
 
       if (profileError) {
