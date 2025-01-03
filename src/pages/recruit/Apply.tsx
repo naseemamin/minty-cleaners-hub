@@ -57,8 +57,12 @@ const Apply = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Generate a UUID for the new profile
+      const id = crypto.randomUUID();
+      
       // Create the insert data with proper typing
       const insertData: TablesInsert<"cleaner_profiles"> = {
+        id,
         first_name: values.first_name,
         last_name: values.last_name,
         mobile_number: values.mobile_number,
