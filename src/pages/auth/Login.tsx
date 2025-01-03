@@ -73,7 +73,7 @@ const Login = () => {
           <Button
             variant="ghost"
             className="mt-2 text-mint-600 hover:text-mint-700"
-            onClick={() => navigate("/auth/signup")}
+            onClick={() => navigate("/signup/quote")}
           >
             Sign up
           </Button>

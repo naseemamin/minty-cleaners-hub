@@ -72,6 +72,71 @@ export type Database = {
         }
         Relationships: []
       }
+      cleaning_quotes: {
+        Row: {
+          bathrooms: number
+          bedrooms: number
+          bring_cleaning_products: boolean | null
+          created_at: string
+          customer_id: string
+          duration: number
+          email: string
+          frequency: Database["public"]["Enums"]["cleaning_frequency"]
+          id: string
+          inside_fridge: boolean | null
+          inside_oven: boolean | null
+          inside_windows: boolean | null
+          ironing: boolean | null
+          laundry: boolean | null
+          postcode: string
+          updated_at: string
+        }
+        Insert: {
+          bathrooms: number
+          bedrooms: number
+          bring_cleaning_products?: boolean | null
+          created_at?: string
+          customer_id: string
+          duration: number
+          email: string
+          frequency: Database["public"]["Enums"]["cleaning_frequency"]
+          id?: string
+          inside_fridge?: boolean | null
+          inside_oven?: boolean | null
+          inside_windows?: boolean | null
+          ironing?: boolean | null
+          laundry?: boolean | null
+          postcode: string
+          updated_at?: string
+        }
+        Update: {
+          bathrooms?: number
+          bedrooms?: number
+          bring_cleaning_products?: boolean | null
+          created_at?: string
+          customer_id?: string
+          duration?: number
+          email?: string
+          frequency?: Database["public"]["Enums"]["cleaning_frequency"]
+          id?: string
+          inside_fridge?: boolean | null
+          inside_oven?: boolean | null
+          inside_windows?: boolean | null
+          ironing?: boolean | null
+          laundry?: boolean | null
+          postcode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cleaning_quotes_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_profiles: {
         Row: {
           created_at: string
@@ -101,7 +166,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      cleaning_frequency: "more_than_weekly" | "weekly" | "biweekly" | "one_off"
     }
     CompositeTypes: {
       [_ in never]: never
