@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -34,6 +36,14 @@ const Navbar = () => {
                 {item.name}
               </a>
             ))}
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-gray-600"
+              onClick={() => navigate("/recruit/apply")}
+            >
+              Professionals
+            </Button>
             <Button variant="ghost" size="sm" className="text-gray-600">
               <User className="h-4 w-4 mr-2" />
               Login
@@ -74,6 +84,17 @@ const Navbar = () => {
               </a>
             ))}
             <div className="flex flex-col space-y-2 px-3 py-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 justify-start"
+                onClick={() => {
+                  navigate("/recruit/apply");
+                  setIsOpen(false);
+                }}
+              >
+                Professionals
+              </Button>
               <Button variant="ghost" size="sm" className="text-gray-600 justify-start">
                 <User className="h-4 w-4 mr-2" />
                 Login

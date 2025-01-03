@@ -9,7 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cleaner_profiles: {
+        Row: {
+          available_days: string[]
+          background_check_date: string | null
+          cleaning_types: string[] | null
+          commitment_length: string
+          created_at: string
+          desired_hours_per_week: number
+          email: string
+          experience_description: string
+          first_name: string
+          gender: string | null
+          id: string
+          last_name: string
+          mobile_number: string
+          postcode: string
+          rating: number | null
+          updated_at: string
+          verified: boolean | null
+          years_experience: string
+        }
+        Insert: {
+          available_days: string[]
+          background_check_date?: string | null
+          cleaning_types?: string[] | null
+          commitment_length: string
+          created_at?: string
+          desired_hours_per_week: number
+          email: string
+          experience_description: string
+          first_name: string
+          gender?: string | null
+          id: string
+          last_name: string
+          mobile_number: string
+          postcode: string
+          rating?: number | null
+          updated_at?: string
+          verified?: boolean | null
+          years_experience: string
+        }
+        Update: {
+          available_days?: string[]
+          background_check_date?: string | null
+          cleaning_types?: string[] | null
+          commitment_length?: string
+          created_at?: string
+          desired_hours_per_week?: number
+          email?: string
+          experience_description?: string
+          first_name?: string
+          gender?: string | null
+          id?: string
+          last_name?: string
+          mobile_number?: string
+          postcode?: string
+          rating?: number | null
+          updated_at?: string
+          verified?: boolean | null
+          years_experience?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
