@@ -3,27 +3,13 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { PersonalInfoSection } from "@/components/recruit/PersonalInfoSection";
+import { ExperienceSection } from "@/components/recruit/ExperienceSection";
+import { AvailabilitySection } from "@/components/recruit/AvailabilitySection";
 
 const formSchema = z.object({
   first_name: z.string().min(2, "First name must be at least 2 characters"),
@@ -77,10 +63,9 @@ const Apply = () => {
         commitment_length: values.commitment_length,
       };
 
-      const { data: profileData, error: profileError } = await supabase
+      const { error: profileError } = await supabase
         .from('cleaner_profiles')
-        .insert(insertData)
-        .select();
+        .insert(insertData);
 
       if (profileError) {
         console.error('Error submitting application:', profileError);
@@ -88,7 +73,6 @@ const Apply = () => {
         return;
       }
 
-      console.log('Application submitted successfully:', profileData);
       toast.success("Application submitted successfully!");
       navigate("/");
     } catch (error) {
@@ -96,24 +80,6 @@ const Apply = () => {
       toast.error("An unexpected error occurred. Please try again.");
     }
   };
-
-  const cleaningTypes = [
-    "Residential",
-    "Commercial",
-    "Deep Cleaning",
-    "Move In/Out",
-    "Post Construction",
-  ];
-
-  const daysOfWeek = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 py-20">
@@ -123,304 +89,17 @@ const Apply = () => {
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">About You</h2>
-                
-                <FormField
-                  control={form.control}
-                  name="first_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name(s)</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <PersonalInfoSection form={form} />
+              <ExperienceSection form={form} />
+              <AvailabilitySection form={form} />
 
-                <FormField
-                  control={form.control}
-                  name="last_name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="mobile_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UK Mobile Number</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="tel" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="email" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email_confirm"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Email Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} type="email" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="gender"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Gender (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select gender" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                          <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="postcode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UK Home Postcode</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <h2 className="text-xl font-semibold pt-4">Your Experience</h2>
-
-                <FormField
-                  control={form.control}
-                  name="years_experience"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How much experience do you have in professional home cleaning?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select experience level" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="0-1">Less than 1 year</SelectItem>
-                          <SelectItem value="1-2">1-2 years</SelectItem>
-                          <SelectItem value="2-5">2-5 years</SelectItem>
-                          <SelectItem value="5+">More than 5 years</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cleaning_types"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>What type of cleaning experience do you have?</FormLabel>
-                      <div className="grid grid-cols-2 gap-4">
-                        {cleaningTypes.map((type) => (
-                          <FormField
-                            key={type}
-                            control={form.control}
-                            name="cleaning_types"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={type}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(type)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...field.value, type])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== type
-                                              )
-                                            )
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    {type}
-                                  </FormLabel>
-                                </FormItem>
-                              )
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="experience_description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Please describe your home cleaning experience</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="e.g. I cleaned houses through an agency for 2 years."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <h2 className="text-xl font-semibold pt-4">Your Availability</h2>
-
-                <FormField
-                  control={form.control}
-                  name="desired_hours_per_week"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How many hours of cleaning work do you want per week?</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="available_days"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Which days do you want to work?</FormLabel>
-                      <div className="grid grid-cols-2 gap-4">
-                        {daysOfWeek.map((day) => (
-                          <FormField
-                            key={day}
-                            control={form.control}
-                            name="available_days"
-                            render={({ field }) => {
-                              return (
-                                <FormItem
-                                  key={day}
-                                  className="flex flex-row items-start space-x-3 space-y-0"
-                                >
-                                  <FormControl>
-                                    <Checkbox
-                                      checked={field.value?.includes(day)}
-                                      onCheckedChange={(checked) => {
-                                        return checked
-                                          ? field.onChange([...field.value, day])
-                                          : field.onChange(
-                                              field.value?.filter(
-                                                (value) => value !== day
-                                              )
-                                            )
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    {day}
-                                  </FormLabel>
-                                </FormItem>
-                              )
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="commitment_length"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>How long would you like to work with mint?</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select commitment length" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="3-6">3-6 months</SelectItem>
-                          <SelectItem value="6-12">6-12 months</SelectItem>
-                          <SelectItem value="1+">More than 1 year</SelectItem>
-                          <SelectItem value="undecided">Not sure yet</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-mint-500 hover:bg-mint-600"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {form.formState.isSubmitting ? "Submitting..." : "Submit Application"}
-                </Button>
-              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-mint-500 hover:bg-mint-600"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? "Submitting..." : "Submit Application"}
+              </Button>
             </form>
           </Form>
         </div>
