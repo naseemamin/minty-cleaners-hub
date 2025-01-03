@@ -50,33 +50,43 @@ const Apply = () => {
     defaultValues: {
       cleaning_types: [],
       available_days: [],
+      desired_hours_per_week: 0,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email: values.email,
-        password: "temporary-password", // You might want to add a password field to the form
-        options: {
-          data: {
-            user_type: "cleaner",
-            first_name: values.first_name,
-            last_name: values.last_name,
-            mobile_number: values.mobile_number,
-            postcode: values.postcode,
-            years_experience: values.years_experience,
-          },
-        },
-      });
+      // First, try to insert directly into cleaner_profiles
+      const { data: profileData, error: profileError } = await supabase
+        .from('cleaner_profiles')
+        .insert([{
+          first_name: values.first_name,
+          last_name: values.last_name,
+          mobile_number: values.mobile_number,
+          email: values.email,
+          gender: values.gender,
+          postcode: values.postcode,
+          years_experience: values.years_experience,
+          cleaning_types: values.cleaning_types,
+          experience_description: values.experience_description,
+          desired_hours_per_week: values.desired_hours_per_week,
+          available_days: values.available_days,
+          commitment_length: values.commitment_length,
+        }])
+        .select();
 
-      if (error) throw error;
+      if (profileError) {
+        console.error('Error submitting application:', profileError);
+        toast.error("Failed to submit application. Please try again.");
+        return;
+      }
 
+      console.log('Application submitted successfully:', profileData);
       toast.success("Application submitted successfully!");
       navigate("/");
     } catch (error) {
-      toast.error("Error submitting application");
-      console.error(error);
+      console.error('Error in form submission:', error);
+      toast.error("An unexpected error occurred. Please try again.");
     }
   };
 
@@ -395,9 +405,15 @@ const Apply = () => {
                     </FormItem>
                   )}
                 />
-              </div>
 
-              <Button type="submit" className="w-full">Submit Application</Button>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-mint-500 hover:bg-mint-600"
+                  disabled={form.formState.isSubmitting}
+                >
+                  {form.formState.isSubmitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
             </form>
           </Form>
         </div>
