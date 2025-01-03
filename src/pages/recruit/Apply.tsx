@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import type { TablesInsert } from "@/integrations/supabase/types";
 import { PersonalInfoSection } from "@/components/recruit/PersonalInfoSection";
 import { ExperienceSection } from "@/components/recruit/ExperienceSection";
 import { AvailabilitySection } from "@/components/recruit/AvailabilitySection";
@@ -43,32 +42,25 @@ const Apply = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Generate a UUID for the new profile
-      const id = crypto.randomUUID();
-      
-      // Create the insert data with proper typing
-      const insertData: TablesInsert<"cleaner_profiles"> = {
-        id,
-        first_name: values.first_name,
-        last_name: values.last_name,
-        mobile_number: values.mobile_number,
-        email: values.email,
-        gender: values.gender,
-        postcode: values.postcode,
-        years_experience: values.years_experience,
-        cleaning_types: values.cleaning_types,
-        experience_description: values.experience_description,
-        desired_hours_per_week: values.desired_hours_per_week,
-        available_days: values.available_days,
-        commitment_length: values.commitment_length,
-      };
-
-      const { error: profileError } = await supabase
+      const { error } = await supabase
         .from('cleaner_profiles')
-        .insert(insertData);
+        .insert({
+          first_name: values.first_name,
+          last_name: values.last_name,
+          mobile_number: values.mobile_number,
+          email: values.email,
+          gender: values.gender,
+          postcode: values.postcode,
+          years_experience: values.years_experience,
+          cleaning_types: values.cleaning_types,
+          experience_description: values.experience_description,
+          desired_hours_per_week: values.desired_hours_per_week,
+          available_days: values.available_days,
+          commitment_length: values.commitment_length,
+        });
 
-      if (profileError) {
-        console.error('Error submitting application:', profileError);
+      if (error) {
+        console.error('Error submitting application:', error);
         toast.error("Failed to submit application. Please try again.");
         return;
       }

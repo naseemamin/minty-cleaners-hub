@@ -41,7 +41,7 @@ export type Database = {
           experience_description: string
           first_name: string
           gender?: string | null
-          id: string
+          id?: string
           last_name: string
           mobile_number: string
           postcode: string
