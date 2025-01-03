@@ -7,6 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type FrequencyType = Database['public']['Enums']['cleaning_frequency'];
 
 const QuoteForm = () => {
   const navigate = useNavigate();
@@ -21,7 +24,7 @@ const QuoteForm = () => {
     insideOven: false,
     duration: 2.0,
     bringCleaningProducts: false,
-    frequency: "weekly",
+    frequency: 'weekly' as FrequencyType,
     email: "",
   });
 
@@ -56,7 +59,7 @@ const QuoteForm = () => {
       if (error) throw error;
 
       toast.success("Quote submitted successfully!");
-      navigate("/dashboard"); // We'll create this route later
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to submit quote. Please try again.");
@@ -225,10 +228,10 @@ const QuoteForm = () => {
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {[
-                    { value: "more_than_weekly", label: "More than weekly" },
-                    { value: "weekly", label: "Every week" },
-                    { value: "biweekly", label: "Every 2 weeks" },
-                    { value: "one_off", label: "One-off" },
+                    { value: "more_than_weekly" as const, label: "More than weekly" },
+                    { value: "weekly" as const, label: "Every week" },
+                    { value: "biweekly" as const, label: "Every 2 weeks" },
+                    { value: "one_off" as const, label: "One-off" },
                   ].map((option) => (
                     <Button
                       key={option.value}
