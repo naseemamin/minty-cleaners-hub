@@ -97,8 +97,11 @@ serve(async (req) => {
     const startTime = new Date(interviewDate)
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000) // Add 1 hour
 
-    const adminEmail = Deno.env.get('GMAIL_EMAIL')!
-    console.log('Admin email:', adminEmail)
+    const adminEmail = Deno.env.get('GMAIL_EMAIL')
+    if (!adminEmail) {
+      throw new Error('GMAIL_EMAIL environment variable is not set')
+    }
+    console.log('Admin email that will be used:', adminEmail)
 
     console.log('Creating calendar event with:', {
       adminEmail,
@@ -133,6 +136,8 @@ serve(async (req) => {
       }
     }
 
+    console.log('Calendar event payload:', event)
+
     const calendarResponse = await fetch(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
       {
@@ -152,7 +157,7 @@ serve(async (req) => {
       throw new Error(`Failed to create calendar event: ${calendarData.error?.message || 'Unknown error'}`)
     }
     
-    console.log('Calendar event created:', calendarData)
+    console.log('Calendar event created successfully:', calendarData)
 
     // Update application with Google Meet link
     const { error: updateError } = await supabase
