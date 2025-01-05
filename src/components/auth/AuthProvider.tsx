@@ -28,6 +28,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
+      // Temporarily log the user ID during development
+      if (session?.user) {
+        console.log('Your User ID:', session.user.id);
+        // Display in a temporary floating div
+        const div = document.createElement('div');
+        div.style.position = 'fixed';
+        div.style.bottom = '20px';
+        div.style.right = '20px';
+        div.style.padding = '10px';
+        div.style.background = '#f0f0f0';
+        div.style.border = '1px solid #ccc';
+        div.style.borderRadius = '4px';
+        div.style.zIndex = '9999';
+        div.innerHTML = `Your User ID: <br/><code>${session.user.id}</code>`;
+        document.body.appendChild(div);
+      }
     });
 
     // Listen for auth changes
