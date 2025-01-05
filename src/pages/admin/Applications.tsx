@@ -38,10 +38,10 @@ const AdminApplications = () => {
       return (data || []).map((item) => ({
         ...item,
         cleaner_profile: {
-          first_name: item.cleaner_profile.first_name,
-          last_name: item.cleaner_profile.last_name,
-          email: item.cleaner_profile.email,
-          mobile_number: item.cleaner_profile.mobile_number,
+          first_name: item.cleaner_profile[0]?.first_name || "",
+          last_name: item.cleaner_profile[0]?.last_name || "",
+          email: item.cleaner_profile[0]?.email || "",
+          mobile_number: item.cleaner_profile[0]?.mobile_number || "",
         },
       })) as Application[];
     },
