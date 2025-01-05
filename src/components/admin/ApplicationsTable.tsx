@@ -126,35 +126,32 @@ export const ApplicationsTable = ({
                       </DropdownMenuItem>
                     )}
                     {application.status === "scheduled_interview" && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            onCompleteInterview(application.id, "verified", "")
-                          }
-                        >
-                          Approve & Verify
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() =>
-                            onCompleteInterview(application.id, "rejected", "")
-                          }
-                        >
-                          Reject
-                        </DropdownMenuItem>
-                      </>
+                      <DropdownMenuItem
+                        onClick={() => onApplicationSelect(application.id)}
+                      >
+                        Complete Interview
+                      </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {selectedApplication === application.id && (
-                  <InterviewScheduler
-                    applicationId={application.id}
-                    onSchedule={onScheduleInterview}
-                    isOpen={true}
-                    onOpenChange={(open) =>
-                      onApplicationSelect(open ? application.id : null)
-                    }
-                  />
+                  <>
+                    {application.status === "pending_review" ? (
+                      <InterviewScheduler
+                        applicationId={application.id}
+                        onSchedule={onScheduleInterview}
+                        isOpen={true}
+                        onOpenChange={(open) =>
+                          onApplicationSelect(open ? application.id : null)
+                        }
+                      />
+                    ) : (
+                      <InterviewComplete
+                        applicationId={application.id}
+                        onComplete={onCompleteInterview}
+                      />
+                    )}
+                  </>
                 )}
               </TableCell>
             </TableRow>
