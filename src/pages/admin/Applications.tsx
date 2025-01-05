@@ -63,7 +63,7 @@ const AdminApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profile:cleaner_profiles (
+          cleaner_profile:cleaner_profiles!inner (
             first_name,
             last_name,
             email,
@@ -71,10 +71,23 @@ const AdminApplications = () => {
           )
         `
         )
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .single();
 
       if (error) throw error;
-      return data as Application[];
+      
+      // Transform the data to match the Application interface
+      const transformedData = data ? [{
+        ...data,
+        cleaner_profile: {
+          first_name: data.cleaner_profile.first_name,
+          last_name: data.cleaner_profile.last_name,
+          email: data.cleaner_profile.email,
+          mobile_number: data.cleaner_profile.mobile_number
+        }
+      }] : [];
+
+      return transformedData as Application[];
     },
   });
 
