@@ -1,6 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { google } from "https://deno.land/x/google_sheets_api@0.2.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -86,27 +84,32 @@ async function sendEmailNotification(application: CleanerApplication) {
     https://docs.google.com/spreadsheets/d/${Deno.env.get('GOOGLE_SHEET_ID')}
   `;
 
-  const emailData = {
-    from: GMAIL_EMAIL,
-    to: GMAIL_EMAIL, // Sending to the same email address
-    subject: `New Cleaner Application: ${application.first_name} ${application.last_name}`,
-    text: emailBody,
-  };
+  try {
+    const response = await fetch('https://api.gmail.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${btoa(`${GMAIL_EMAIL}:${GMAIL_APP_PASSWORD}`)}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        raw: btoa(
+          `From: ${GMAIL_EMAIL}\r\n` +
+          `To: ${GMAIL_EMAIL}\r\n` +
+          `Subject: New Cleaner Application: ${application.first_name} ${application.last_name}\r\n\r\n` +
+          emailBody
+        ).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      }),
+    });
 
-  const response = await fetch('https://api.smtp2go.com/v3/email/send', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${btoa(`apikey:${GMAIL_APP_PASSWORD}`)}`,
-    },
-    body: JSON.stringify(emailData),
-  });
+    if (!response.ok) {
+      throw new Error(`Failed to send email: ${await response.text()}`);
+    }
 
-  if (!response.ok) {
-    throw new Error(`Failed to send email: ${await response.text()}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return false;
   }
-
-  return true;
 }
 
 async function updateGoogleSheet(application: CleanerApplication) {
@@ -115,15 +118,15 @@ async function updateGoogleSheet(application: CleanerApplication) {
     throw new Error('Google Sheet ID not configured');
   }
 
-  // Format the data to match the sheet columns
-  const rowData = [
+  // Format the data as a row
+  const row = [
     application.id,
     application.first_name,
     application.last_name,
     application.mobile_number,
     application.email,
-    '', // gender (empty as it's not in the application)
-    '', // postcode (empty as it's not in the application)
+    '', // gender
+    '', // postcode
     application.years_experience,
     application.cleaning_types.join(', '),
     application.experience_description,
@@ -134,23 +137,32 @@ async function updateGoogleSheet(application: CleanerApplication) {
     '', // background_check_date
     null, // rating
     application.created_at,
-    application.created_at, // updated_at same as created_at for new entries
+    application.created_at, // updated_at
   ];
 
   try {
-    const sheets = google.sheets({ version: 'v4' });
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: SHEET_ID,
-      range: 'Sheet1!A:R', // Columns A through R for all our fields
-      valueInputOption: 'RAW',
-      requestBody: {
-        values: [rowData],
-      },
-    });
+    // Use Google Sheets API v4
+    const response = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A1:R1:append?valueInputOption=RAW`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('GOOGLE_SHEETS_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          values: [row],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to update sheet: ${await response.text()}`);
+    }
 
     return true;
   } catch (error) {
-    console.error('Error updating Google Sheet:', error);
-    throw new Error('Failed to update Google Sheet');
+    console.error('Error updating sheet:', error);
+    return false;
   }
 }
