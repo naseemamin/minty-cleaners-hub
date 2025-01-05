@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ApplicationsTable } from "@/components/admin/ApplicationsTable";
-import type { Application } from "@/types/applications";
+import type { Application, ApplicationStatus } from "@/types/applications";
 
 interface ApplicationResponse {
   id: string;
-  status: string;
+  status: ApplicationStatus;
   interview_date: string | null;
   interview_notes: string | null;
   created_at: string;
