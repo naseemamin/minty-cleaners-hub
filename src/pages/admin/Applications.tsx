@@ -11,7 +11,7 @@ interface ApplicationResponse {
   interview_date: string | null;
   interview_notes: string | null;
   created_at: string;
-  cleaner_profiles: {
+  cleaner_profile: {
     first_name: string;
     last_name: string;
     email: string;
@@ -37,7 +37,7 @@ const AdminApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profiles!inner(
+          cleaner_profile:cleaner_profiles!inner(
             first_name,
             last_name,
             email,
@@ -49,10 +49,7 @@ const AdminApplications = () => {
 
       if (error) throw error;
 
-      return (data as ApplicationResponse[]).map((item) => ({
-        ...item,
-        cleaner_profile: item.cleaner_profiles,
-      })) as Application[];
+      return data as unknown as ApplicationResponse[];
     },
   });
 
