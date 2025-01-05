@@ -77,7 +77,8 @@ const AdminApplications = () => {
       applicationId: string;
       date: Date;
     }) => {
-      const { error } = await supabase
+      // First, update the database
+      const { error: dbError } = await supabase
         .from("application_process")
         .update({
           status: "scheduled_interview",
@@ -85,7 +86,26 @@ const AdminApplications = () => {
         })
         .eq("id", applicationId);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      // Then, create the calendar event
+      console.log("Invoking create-google-meet function...");
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        "create-google-meet",
+        {
+          body: {
+            applicationId,
+            interviewDate: date.toISOString(),
+          },
+        }
+      );
+
+      if (functionError) {
+        console.error("Error creating calendar event:", functionError);
+        throw new Error("Failed to create calendar event");
+      }
+
+      console.log("Calendar event created:", functionData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
