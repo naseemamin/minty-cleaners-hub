@@ -62,6 +62,12 @@ async function updateGoogleSheet(application: CleanerApplication) {
     throw new Error('Missing required environment variables');
   }
 
+  console.log('Starting Google Sheets update with credentials:', {
+    email: EMAIL,
+    sheetId: SHEET_ID,
+    hasPassword: !!APP_PASSWORD
+  });
+
   const row = [
     application.id,
     application.first_name,
