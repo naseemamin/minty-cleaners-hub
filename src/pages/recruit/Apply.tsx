@@ -70,6 +70,16 @@ const Apply = () => {
       }
 
       if (data) {
+        // Call the edge function to handle the notification
+        const { error: notificationError } = await supabase.functions.invoke('export-cleaner-application', {
+          body: data
+        });
+
+        if (notificationError) {
+          console.error('Error sending notification:', notificationError);
+          // Don't show this error to the user since the application was still submitted successfully
+        }
+
         console.log('Application submitted successfully:', data);
         toast.success("Application submitted successfully! We'll be in touch soon.");
         navigate("/");
