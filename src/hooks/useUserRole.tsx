@@ -4,6 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "admin" | "cleaner" | "customer";
 
+interface RoleResponse {
+  roles: {
+    name: UserRole;
+  };
+}
+
 export const useUserRole = () => {
   const { session } = useAuth();
   const [role, setRole] = useState<UserRole | null>(null);
@@ -20,19 +26,15 @@ export const useUserRole = () => {
       try {
         const { data, error } = await supabase
           .from("user_roles")
-          .select(`
-            roles (
-              name
-            )
-          `)
+          .select("roles:role_id(name)")
           .eq("user_id", session.user.id)
           .single();
 
         if (error) throw error;
 
-        // Safely access the role name from the response data
-        const roleName = data?.roles?.name as UserRole;
-        setRole(roleName || null);
+        // Type assertion and safe access of the role name
+        const roleData = data as RoleResponse;
+        setRole(roleData?.roles?.name || null);
       } catch (error) {
         console.error("Error fetching user role:", error);
         setRole(null);
