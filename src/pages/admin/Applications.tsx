@@ -37,7 +37,7 @@ const AdminApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profile:cleaner_profiles!inner(
+          cleaner_profile:cleaner_profiles(
             first_name,
             last_name,
             email,
