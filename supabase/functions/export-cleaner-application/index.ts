@@ -54,18 +54,14 @@ serve(async (req) => {
 
 async function updateGoogleSheet(application: CleanerApplication) {
   const SHEET_ID = Deno.env.get('GOOGLE_SHEET_ID');
-  const EMAIL = Deno.env.get('GMAIL_EMAIL');
-  const APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD');
+  const CREDENTIALS = Deno.env.get('GOOGLE_SERVICE_ACCOUNT_KEY');
 
-  if (!SHEET_ID || !EMAIL || !APP_PASSWORD) {
+  if (!SHEET_ID || !CREDENTIALS) {
     console.error('Missing required environment variables');
     throw new Error('Missing required environment variables');
   }
 
-  console.log('Starting Google Sheets update with credentials:', {
-    email: EMAIL,
-    sheetId: SHEET_ID,
-  });
+  console.log('Starting Google Sheets update with sheet ID:', SHEET_ID);
 
   const row = [
     application.id,
@@ -83,20 +79,18 @@ async function updateGoogleSheet(application: CleanerApplication) {
   ];
 
   try {
-    // Create OAuth2 client
-    const oauth2Client = new google.auth.OAuth2(
-      null, // No client ID needed
-      null, // No client secret needed
-      'https://developers.google.com/oauthplayground'
+    // Parse the service account credentials
+    const credentials = JSON.parse(CREDENTIALS);
+    
+    // Create JWT client
+    const auth = new google.auth.JWT(
+      credentials.client_email,
+      undefined,
+      credentials.private_key,
+      ['https://www.googleapis.com/auth/spreadsheets']
     );
 
-    // Set credentials directly
-    oauth2Client.setCredentials({
-      access_token: APP_PASSWORD, // Using APP_PASSWORD as access token
-      refresh_token: APP_PASSWORD // Using APP_PASSWORD as refresh token
-    });
-
-    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
+    const sheets = google.sheets({ version: 'v4', auth });
     console.log('Attempting to append row to sheet:', SHEET_ID);
 
     const response = await sheets.spreadsheets.values.append({
