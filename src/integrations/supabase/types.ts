@@ -9,6 +9,67 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_date: string
+          cleaner_id: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          notes: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          cleaner_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          cleaner_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_cleaner_id_fkey"
+            columns: ["cleaner_id"]
+            isOneToOne: false
+            referencedRelation: "cleaner_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cleaner_profiles: {
         Row: {
           available_days: string[]
@@ -158,6 +219,89 @@ export type Database = {
         }
         Relationships: []
       }
+      roles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          base_price: number
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          service_type: Database["public"]["Enums"]["service_type"]
+          updated_at: string
+        }
+        Insert: {
+          base_price: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          service_type: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          service_type?: Database["public"]["Enums"]["service_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -166,7 +310,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      booking_status: "pending" | "confirmed" | "completed" | "cancelled"
       cleaning_frequency: "more_than_weekly" | "weekly" | "biweekly" | "one_off"
+      service_type:
+        | "regular"
+        | "deep_clean"
+        | "move_in_out"
+        | "post_construction"
     }
     CompositeTypes: {
       [_ in never]: never
