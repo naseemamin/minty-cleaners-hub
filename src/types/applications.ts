@@ -12,6 +12,14 @@ export interface Application {
     last_name: string;
     email: string;
     mobile_number: string;
+    gender: string | null;
+    postcode: string;
+    years_experience: string;
+    cleaning_types: string[] | null;
+    experience_description: string;
+    desired_hours_per_week: number;
+    available_days: string[];
+    commitment_length: string;
   };
   status: ApplicationStatus;
   interview_date: string | null;
