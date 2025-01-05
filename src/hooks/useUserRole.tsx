@@ -8,7 +8,7 @@ interface RoleData {
   name: UserRole;
 }
 
-interface RoleResponse {
+interface UserRoleResponse {
   role_id: RoleData;
 }
 
@@ -34,9 +34,8 @@ export const useUserRole = () => {
 
         if (error) throw error;
 
-        // Type assertion and safe access of the role name
-        const roleData = data as RoleResponse;
-        setRole(roleData?.role_id?.name || null);
+        const userRole = data as UserRoleResponse;
+        setRole(userRole?.role_id?.name || null);
       } catch (error) {
         console.error("Error fetching user role:", error);
         setRole(null);
