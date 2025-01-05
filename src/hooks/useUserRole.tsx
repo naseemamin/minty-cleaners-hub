@@ -25,7 +25,7 @@ export const useUserRole = () => {
           .single();
 
         if (error) throw error;
-        
+
         // Safely access the role name from the response data
         const roleName = data?.roles?.name as UserRole;
         setRole(roleName || null);
