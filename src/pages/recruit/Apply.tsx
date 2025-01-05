@@ -44,7 +44,8 @@ const Apply = () => {
     try {
       console.log('Submitting application with values:', values);
       
-      const { data, error: insertError } = await supabase
+      // First, create the cleaner profile
+      const { data: cleanerData, error: cleanerError } = await supabase
         .from('cleaner_profiles')
         .insert({
           first_name: values.first_name,
@@ -63,13 +64,27 @@ const Apply = () => {
         .select()
         .single();
 
-      if (insertError) {
-        console.error('Error submitting application:', insertError);
+      if (cleanerError) {
+        console.error('Error creating cleaner profile:', cleanerError);
         toast.error("Failed to submit application. Please try again.");
         return;
       }
 
-      console.log('Application submitted successfully:', data);
+      // Then, create the application process entry
+      const { error: applicationError } = await supabase
+        .from('application_process')
+        .insert({
+          cleaner_id: cleanerData.id,
+          status: 'pending_review'
+        });
+
+      if (applicationError) {
+        console.error('Error creating application process:', applicationError);
+        toast.error("Failed to submit application. Please try again.");
+        return;
+      }
+
+      console.log('Application submitted successfully:', cleanerData);
       toast.success("Application submitted successfully! We'll be in touch soon.");
       navigate("/");
       
