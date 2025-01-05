@@ -44,9 +44,9 @@ const Apply = () => {
     try {
       console.log('Submitting application with values:', values);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('cleaner_profiles')
-        .insert([{
+        .insert({
           first_name: values.first_name,
           last_name: values.last_name,
           mobile_number: values.mobile_number,
@@ -59,8 +59,7 @@ const Apply = () => {
           desired_hours_per_week: values.desired_hours_per_week,
           available_days: values.available_days,
           commitment_length: values.commitment_length,
-        }])
-        .select();
+        });
 
       if (error) {
         console.error('Error submitting application:', error);
@@ -68,7 +67,7 @@ const Apply = () => {
         return;
       }
 
-      console.log('Application submitted successfully:', data);
+      console.log('Application submitted successfully');
       toast.success("Application submitted successfully!");
       navigate("/");
     } catch (error) {
