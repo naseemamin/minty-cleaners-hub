@@ -60,6 +60,7 @@ const Apply = () => {
           available_days: values.available_days,
           commitment_length: values.commitment_length,
         })
+        .select()
         .single();
 
       if (error) {
