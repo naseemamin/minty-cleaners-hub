@@ -35,7 +35,7 @@ const AdminApplications = () => {
 
       if (error) throw error;
 
-      return data.map((item) => ({
+      return data.map((item: any) => ({
         ...item,
         cleaner_profile: {
           first_name: item.cleaner_profiles.first_name,
