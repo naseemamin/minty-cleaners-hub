@@ -16,6 +16,14 @@ interface ApplicationResponse {
     last_name: string;
     email: string;
     mobile_number: string;
+    gender: string | null;
+    postcode: string;
+    years_experience: string;
+    cleaning_types: string[] | null;
+    experience_description: string;
+    desired_hours_per_week: number;
+    available_days: string[];
+    commitment_length: string;
   };
 }
 
@@ -41,7 +49,15 @@ const AdminApplications = () => {
             first_name,
             last_name,
             email,
-            mobile_number
+            mobile_number,
+            gender,
+            postcode,
+            years_experience,
+            cleaning_types,
+            experience_description,
+            desired_hours_per_week,
+            available_days,
+            commitment_length
           )
         `
         )
