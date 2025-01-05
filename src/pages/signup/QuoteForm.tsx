@@ -11,7 +11,36 @@ import { PropertyDetails } from "@/components/quote/PropertyDetails";
 import { ExtraTasks } from "@/components/quote/ExtraTasks";
 import { DurationSelector } from "@/components/quote/DurationSelector";
 import { FrequencySelector } from "@/components/quote/FrequencySelector";
+import { QuoteSummary } from "@/components/quote/QuoteSummary";
 import type { QuoteFormData, FrequencyType } from "@/types/quote";
+
+const calculateRecommendedDuration = (
+  bedrooms: number,
+  bathrooms: number,
+  tasks: {
+    ironing: boolean;
+    laundry: boolean;
+    insideWindows: boolean;
+    insideFridge: boolean;
+    insideOven: boolean;
+  }
+) => {
+  // Base duration is 2 hours
+  let duration = 2;
+
+  // Add 0.5 hours for each additional bedroom beyond 1
+  duration += Math.max(0, (bedrooms - 1) * 0.5);
+
+  // Add 0.5 hours for each additional bathroom beyond 1
+  duration += Math.max(0, (bathrooms - 1) * 0.5);
+
+  // Add 0.5 hours for each selected extra task
+  const selectedTasks = Object.values(tasks).filter(Boolean).length;
+  duration += selectedTasks * 0.5;
+
+  // Round to nearest 0.5
+  return Math.min(3.5, Math.max(2, Math.round(duration * 2) / 2));
+};
 
 const QuoteForm = () => {
   const navigate = useNavigate();
@@ -29,6 +58,18 @@ const QuoteForm = () => {
     frequency: 'weekly' as FrequencyType,
     email: "",
   });
+
+  const recommendedDuration = calculateRecommendedDuration(
+    formData.bedrooms,
+    formData.bathrooms,
+    {
+      ironing: formData.ironing,
+      laundry: formData.laundry,
+      insideWindows: formData.insideWindows,
+      insideFridge: formData.insideFridge,
+      insideOven: formData.insideOven,
+    }
+  );
 
   const handleUpdate = (field: keyof QuoteFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -74,77 +115,97 @@ const QuoteForm = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
-            Customise your clean
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <PropertyDetails
-              bedrooms={formData.bedrooms}
-              bathrooms={formData.bathrooms}
-              postcode={formData.postcode}
-              onUpdate={handleUpdate}
-            />
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center">
+              Customise your clean
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <PropertyDetails
+                bedrooms={formData.bedrooms}
+                bathrooms={formData.bathrooms}
+                postcode={formData.postcode}
+                onUpdate={handleUpdate}
+              />
 
-            <ExtraTasks
-              tasks={{
-                ironing: formData.ironing,
-                laundry: formData.laundry,
-                insideWindows: formData.insideWindows,
-                insideFridge: formData.insideFridge,
-                insideOven: formData.insideOven,
-              }}
-              onUpdate={handleUpdate}
-            />
+              <ExtraTasks
+                tasks={{
+                  ironing: formData.ironing,
+                  laundry: formData.laundry,
+                  insideWindows: formData.insideWindows,
+                  insideFridge: formData.insideFridge,
+                  insideOven: formData.insideOven,
+                }}
+                onUpdate={handleUpdate}
+              />
 
-            <DurationSelector
-              duration={formData.duration}
-              onUpdate={(value) => handleUpdate("duration", value)}
-            />
+              <DurationSelector
+                duration={formData.duration}
+                recommendedDuration={recommendedDuration}
+                onUpdate={(value) => handleUpdate("duration", value)}
+              />
 
-            <div>
-              <Label>Cleaning products</Label>
-              <p className="text-sm text-muted-foreground mb-2">
-                Includes sprays and cloths. Your Housekeeper cannot bring a vacuum, mop or bucket
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="products"
-                    checked={formData.bringCleaningProducts}
-                    onCheckedChange={(checked) => 
-                      handleUpdate("bringCleaningProducts", checked)}
-                  />
-                  <Label htmlFor="products">Bring cleaning products (+£6.00)</Label>
+              <div>
+                <Label>Cleaning products</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Includes sprays and cloths. Your Housekeeper cannot bring a vacuum, mop or bucket
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="products"
+                      checked={formData.bringCleaningProducts}
+                      onCheckedChange={(checked) => 
+                        handleUpdate("bringCleaningProducts", checked)}
+                    />
+                    <Label htmlFor="products">Bring cleaning products (+£6.00)</Label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <FrequencySelector
-              frequency={formData.frequency}
-              onUpdate={(value) => handleUpdate("frequency", value)}
-            />
-
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleUpdate("email", e.target.value)}
-                required
+              <FrequencySelector
+                frequency={formData.frequency}
+                onUpdate={(value) => handleUpdate("frequency", value)}
               />
-            </div>
 
-            <Button type="submit" className="w-full">
-              Submit Quote
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleUpdate("email", e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button type="submit" className="w-full">
+                Submit Quote
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="md:mt-[72px]">
+          <QuoteSummary
+            bedrooms={formData.bedrooms}
+            bathrooms={formData.bathrooms}
+            duration={formData.duration}
+            tasks={{
+              ironing: formData.ironing,
+              laundry: formData.laundry,
+              insideWindows: formData.insideWindows,
+              insideFridge: formData.insideFridge,
+              insideOven: formData.insideOven,
+            }}
+            frequency={formData.frequency}
+            bringCleaningProducts={formData.bringCleaningProducts}
+          />
+        </div>
+      </div>
     </div>
   );
 };

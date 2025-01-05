@@ -3,17 +3,18 @@ import { Label } from "@/components/ui/label";
 
 interface DurationSelectorProps {
   duration: number;
+  recommendedDuration: number;
   onUpdate: (duration: number) => void;
 }
 
-export const DurationSelector = ({ duration, onUpdate }: DurationSelectorProps) => {
+export const DurationSelector = ({ duration, recommendedDuration, onUpdate }: DurationSelectorProps) => {
   const durations = [2.0, 2.5, 3.0, 3.5];
 
   return (
     <div>
       <Label>Duration</Label>
       <p className="text-sm text-muted-foreground mb-2">
-        We recommend selecting 2.0 hours based on your bedrooms, bathrooms and extra tasks
+        We recommend selecting {recommendedDuration} hours based on your bedrooms, bathrooms and extra tasks
       </p>
       <div className="flex gap-2">
         {durations.map((hours) => (
