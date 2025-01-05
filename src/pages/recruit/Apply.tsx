@@ -44,7 +44,8 @@ const Apply = () => {
     try {
       console.log('Submitting application with values:', values);
       
-      const { data, error } = await supabase
+      // First, insert the data
+      const { error: insertError } = await supabase
         .from('cleaner_profiles')
         .insert({
           first_name: values.first_name,
@@ -59,17 +60,15 @@ const Apply = () => {
           desired_hours_per_week: values.desired_hours_per_week,
           available_days: values.available_days,
           commitment_length: values.commitment_length,
-        })
-        .select()
-        .single();
+        });
 
-      if (error) {
-        console.error('Error submitting application:', error);
-        toast.error(`Failed to submit application: ${error.message}`);
+      if (insertError) {
+        console.error('Error submitting application:', insertError);
+        toast.error(`Failed to submit application: ${insertError.message}`);
         return;
       }
 
-      console.log('Application submitted successfully:', data);
+      console.log('Application submitted successfully');
       toast.success("Application submitted successfully! We'll be in touch soon.");
       navigate("/");
     } catch (error) {
