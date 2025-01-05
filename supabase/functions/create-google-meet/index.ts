@@ -19,7 +19,6 @@ interface GoogleCalendarEvent {
   }
   attendees: {
     email: string
-    responseStatus?: string
   }[]
   conferenceData: {
     createRequest: {
@@ -38,13 +37,17 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting calendar event creation process...')
+    
     const { applicationId, interviewDate } = await req.json()
+    console.log('Received request data:', { applicationId, interviewDate })
 
     // Get application details from database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
+    console.log('Fetching application details...')
     const { data: application, error: applicationError } = await supabase
       .from('application_process')
       .select(`
@@ -58,9 +61,15 @@ serve(async (req) => {
       .eq('id', applicationId)
       .single()
 
-    if (applicationError) throw applicationError
+    if (applicationError) {
+      console.error('Error fetching application:', applicationError)
+      throw applicationError
+    }
+
+    console.log('Application details:', application)
 
     // Create access token using refresh token
+    console.log('Getting Google Calendar access token...')
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: {
@@ -74,13 +83,22 @@ serve(async (req) => {
       }),
     })
 
-    const { access_token } = await tokenResponse.json()
+    const tokenData = await tokenResponse.json()
+    console.log('Token response status:', tokenResponse.status)
+    
+    if (!tokenResponse.ok) {
+      console.error('Token error:', tokenData)
+      throw new Error(`Failed to get access token: ${tokenData.error}`)
+    }
+
+    const { access_token } = tokenData
 
     // Calculate end time (1 hour after start)
     const startTime = new Date(interviewDate)
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000) // Add 1 hour
 
     const adminEmail = Deno.env.get('GMAIL_EMAIL')!
+    console.log('Admin email:', adminEmail)
 
     // Create calendar event with Google Meet
     const event: GoogleCalendarEvent = {
@@ -127,21 +145,30 @@ serve(async (req) => {
       }
     )
 
-    const calendarEvent = await calendarResponse.json()
-    console.log('Calendar event created:', calendarEvent)
+    const calendarData = await calendarResponse.json()
+    
+    if (!calendarResponse.ok) {
+      console.error('Calendar API error:', calendarData)
+      throw new Error(`Failed to create calendar event: ${calendarData.error?.message || 'Unknown error'}`)
+    }
+    
+    console.log('Calendar event created:', calendarData)
 
     // Update application with Google Meet link
     const { error: updateError } = await supabase
       .from('application_process')
       .update({
-        google_meet_link: calendarEvent.hangoutLink
+        google_meet_link: calendarData.hangoutLink
       })
       .eq('id', applicationId)
 
-    if (updateError) throw updateError
+    if (updateError) {
+      console.error('Error updating application:', updateError)
+      throw updateError
+    }
 
     return new Response(
-      JSON.stringify({ meetLink: calendarEvent.hangoutLink }),
+      JSON.stringify({ meetLink: calendarData.hangoutLink }),
       { 
         headers: { 
           ...corsHeaders,
@@ -152,7 +179,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         status: 500,
         headers: {
