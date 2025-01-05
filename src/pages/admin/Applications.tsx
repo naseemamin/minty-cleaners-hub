@@ -37,7 +37,7 @@ const AdminApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profiles!inner (
+          cleaner_profiles (
             first_name,
             last_name,
             email,
@@ -51,12 +51,7 @@ const AdminApplications = () => {
 
       return (data as ApplicationResponse[]).map((item) => ({
         ...item,
-        cleaner_profile: {
-          first_name: item.cleaner_profiles.first_name,
-          last_name: item.cleaner_profiles.last_name,
-          email: item.cleaner_profiles.email,
-          mobile_number: item.cleaner_profiles.mobile_number,
-        },
+        cleaner_profile: item.cleaner_profiles,
       })) as Application[];
     },
   });
