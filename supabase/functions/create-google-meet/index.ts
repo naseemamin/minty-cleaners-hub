@@ -31,7 +31,6 @@ interface GoogleCalendarEvent {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
@@ -42,7 +41,6 @@ serve(async (req) => {
     const { applicationId, interviewDate } = await req.json()
     console.log('Received request data:', { applicationId, interviewDate })
 
-    // Get application details from database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
@@ -68,7 +66,17 @@ serve(async (req) => {
 
     console.log('Application details:', application)
 
-    // Create access token using refresh token
+    // Get Google Calendar credentials
+    const clientId = Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID')
+    const clientSecret = Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET')
+    const refreshToken = Deno.env.get('GOOGLE_CALENDAR_REFRESH_TOKEN')
+    const adminEmail = Deno.env.get('GMAIL_EMAIL')
+
+    // Validate all required credentials
+    if (!clientId || !clientSecret || !refreshToken || !adminEmail) {
+      throw new Error('Missing required Google Calendar credentials')
+    }
+
     console.log('Getting Google Calendar access token...')
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
@@ -76,9 +84,9 @@ serve(async (req) => {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID')!,
-        client_secret: Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET')!,
-        refresh_token: Deno.env.get('GOOGLE_CALENDAR_REFRESH_TOKEN')!,
+        client_id: clientId,
+        client_secret: clientSecret,
+        refresh_token: refreshToken,
         grant_type: 'refresh_token',
       }),
     })
@@ -93,24 +101,16 @@ serve(async (req) => {
 
     const { access_token } = tokenData
 
-    // Calculate end time (1 hour after start)
     const startTime = new Date(interviewDate)
-    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000) // Add 1 hour
-
-    const adminEmail = Deno.env.get('GMAIL_EMAIL')
-    if (!adminEmail) {
-      throw new Error('GMAIL_EMAIL environment variable is not set')
-    }
-    console.log('Admin email that will be used:', adminEmail)
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000)
 
     console.log('Creating calendar event with:', {
-      adminEmail,
-      applicantEmail: application.cleaner_profiles.email,
+      organizer: adminEmail,
+      attendee: application.cleaner_profiles.email,
       startTime: startTime.toISOString(),
       endTime: endTime.toISOString()
     })
 
-    // Create calendar event with Google Meet
     const event: GoogleCalendarEvent = {
       summary: `Interview with ${application.cleaner_profiles.first_name} ${application.cleaner_profiles.last_name}`,
       description: 'Cleaner interview for Mint Cleaning Services',
@@ -138,8 +138,9 @@ serve(async (req) => {
 
     console.log('Calendar event payload:', event)
 
+    // Make sure to use the primary calendar and send notifications
     const calendarResponse = await fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all&supportsAttachments=true',
       {
         method: 'POST',
         headers: {
