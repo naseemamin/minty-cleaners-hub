@@ -78,10 +78,12 @@ async function updateGoogleSheet(application: CleanerApplication) {
   ];
 
   try {
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({
-      refresh_token: APP_PASSWORD
-    });
+    const auth = new google.auth.JWT(
+      EMAIL,
+      undefined,
+      APP_PASSWORD,
+      ['https://www.googleapis.com/auth/spreadsheets']
+    );
 
     const sheets = google.sheets({ version: 'v4', auth });
     console.log('Attempting to append row to sheet:', SHEET_ID);
