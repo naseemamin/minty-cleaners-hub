@@ -23,14 +23,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/recruit/apply" element={<Apply />} />
             <Route path="/auth/login" element={<Login />} />
-            <Route 
-              path="/signup/quote" 
-              element={
-                <ProtectedRoute requiredRole="customer">
-                  <QuoteForm />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/signup/quote" element={<QuoteForm />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
