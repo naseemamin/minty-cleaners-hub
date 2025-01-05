@@ -106,8 +106,12 @@ const AdminApplications = () => {
       }
 
       console.log("Calendar event created:", functionData);
+      
+      // Return the updated application data
+      return { applicationId, date, functionData };
     },
     onSuccess: () => {
+      // Invalidate and refetch the applications query to update the UI
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast.success("Interview scheduled successfully");
       setSelectedApplication(null);
