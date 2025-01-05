@@ -58,11 +58,9 @@ serve(async (req) => {
 });
 
 async function sendEmailNotification(application: CleanerApplication) {
-  const GMAIL_EMAIL = Deno.env.get('GMAIL_EMAIL');
-  const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD');
-
-  if (!GMAIL_EMAIL || !GMAIL_APP_PASSWORD) {
-    throw new Error('Email credentials not configured');
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+  if (!RESEND_API_KEY) {
+    throw new Error('Resend API key not configured');
   }
 
   const emailBody = `
@@ -85,19 +83,17 @@ async function sendEmailNotification(application: CleanerApplication) {
   `;
 
   try {
-    const response = await fetch('https://api.gmail.com/gmail/v1/users/me/messages/send', {
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(`${GMAIL_EMAIL}:${GMAIL_APP_PASSWORD}`)}`,
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        raw: btoa(
-          `From: ${GMAIL_EMAIL}\r\n` +
-          `To: ${GMAIL_EMAIL}\r\n` +
-          `Subject: New Cleaner Application: ${application.first_name} ${application.last_name}\r\n\r\n` +
-          emailBody
-        ).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+        from: 'Cleaning Service <onboarding@resend.dev>',
+        to: ['admin@yourcompany.com'], // Replace with your admin email
+        subject: `New Cleaner Application: ${application.first_name} ${application.last_name}`,
+        html: emailBody.replace(/\n/g, '<br>').replace(/\s{2,}/g, ' '),
       }),
     });
 
