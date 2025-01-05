@@ -42,9 +42,9 @@ const Apply = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('cleaner_profiles')
-        .insert({
+        .insert([{
           first_name: values.first_name,
           last_name: values.last_name,
           mobile_number: values.mobile_number,
@@ -57,7 +57,9 @@ const Apply = () => {
           desired_hours_per_week: values.desired_hours_per_week,
           available_days: values.available_days,
           commitment_length: values.commitment_length,
-        });
+        }])
+        .select()
+        .single();
 
       if (error) {
         console.error('Error submitting application:', error);
