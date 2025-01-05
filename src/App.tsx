@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Apply from "./pages/recruit/Apply";
 import Login from "./pages/auth/Login";
 import QuoteForm from "./pages/signup/QuoteForm";
+import AdminApplications from "./pages/admin/Applications";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,14 @@ const App = () => (
             <Route path="/recruit/apply" element={<Apply />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/signup/quote" element={<QuoteForm />} />
+            <Route
+              path="/admin/applications"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminApplications />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
