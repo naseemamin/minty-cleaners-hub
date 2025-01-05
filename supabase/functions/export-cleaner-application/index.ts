@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { google } from "npm:googleapis@128.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,16 +31,12 @@ serve(async (req) => {
     const application: CleanerApplication = await req.json();
     console.log('Received application:', application);
 
-    // Send email notification
-    const emailSent = await sendEmailNotification(application);
-    console.log('Email notification sent:', emailSent);
-
     // Update Google Sheet
     const sheetUpdated = await updateGoogleSheet(application);
     console.log('Google Sheet updated:', sheetUpdated);
 
     return new Response(
-      JSON.stringify({ success: true, emailSent, sheetUpdated }),
+      JSON.stringify({ success: true, sheetUpdated }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
@@ -57,61 +54,13 @@ serve(async (req) => {
   }
 });
 
-async function sendEmailNotification(application: CleanerApplication) {
-  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-  if (!RESEND_API_KEY) {
-    throw new Error('Resend API key not configured');
-  }
-
-  const emailBody = `
-    New Cleaner Application Received
-
-    Applicant Details:
-    - Name: ${application.first_name} ${application.last_name}
-    - Email: ${application.email}
-    - Mobile: ${application.mobile_number}
-    - Years of Experience: ${application.years_experience}
-    - Cleaning Types: ${application.cleaning_types.join(', ')}
-    - Experience Description: ${application.experience_description}
-    - Desired Hours per Week: ${application.desired_hours_per_week}
-    - Available Days: ${application.available_days.join(', ')}
-    - Commitment Length: ${application.commitment_length}
-    - Application Date: ${new Date(application.created_at).toLocaleString()}
-
-    View all applications in Google Sheets:
-    https://docs.google.com/spreadsheets/d/${Deno.env.get('GOOGLE_SHEET_ID')}
-  `;
-
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Cleaning Service <onboarding@resend.dev>',
-        to: ['admin@yourcompany.com'], // Replace with your admin email
-        subject: `New Cleaner Application: ${application.first_name} ${application.last_name}`,
-        html: emailBody.replace(/\n/g, '<br>').replace(/\s{2,}/g, ' '),
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to send email: ${await response.text()}`);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error sending email:', error);
-    return false;
-  }
-}
-
 async function updateGoogleSheet(application: CleanerApplication) {
   const SHEET_ID = Deno.env.get('GOOGLE_SHEET_ID');
-  if (!SHEET_ID) {
-    throw new Error('Google Sheet ID not configured');
+  const GMAIL_EMAIL = Deno.env.get('GMAIL_EMAIL');
+  const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD');
+
+  if (!SHEET_ID || !GMAIL_EMAIL || !GMAIL_APP_PASSWORD) {
+    throw new Error('Missing required environment variables');
   }
 
   // Format the data as a row
@@ -121,40 +70,31 @@ async function updateGoogleSheet(application: CleanerApplication) {
     application.last_name,
     application.mobile_number,
     application.email,
-    '', // gender
-    '', // postcode
     application.years_experience,
     application.cleaning_types.join(', '),
     application.experience_description,
     application.desired_hours_per_week,
     application.available_days.join(', '),
     application.commitment_length,
-    false, // verified
-    '', // background_check_date
-    null, // rating
-    application.created_at,
-    application.created_at, // updated_at
+    new Date(application.created_at).toLocaleString()
   ];
 
   try {
-    // Use Google Sheets API v4
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A1:R1:append?valueInputOption=RAW`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('GOOGLE_SHEETS_API_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          values: [row],
-        }),
-      }
-    );
+    const auth = new google.auth.OAuth2();
+    auth.setCredentials({
+      access_token: GMAIL_APP_PASSWORD
+    });
 
-    if (!response.ok) {
-      throw new Error(`Failed to update sheet: ${await response.text()}`);
-    }
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: 'Sheet1!A:L',
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [row]
+      }
+    });
 
     return true;
   } catch (error) {
