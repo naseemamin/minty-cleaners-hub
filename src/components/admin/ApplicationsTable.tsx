@@ -9,6 +9,14 @@ import {
 } from "@/components/ui/table";
 import { InterviewScheduler } from "./InterviewScheduler";
 import { InterviewComplete } from "./InterviewComplete";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { MoreHorizontal } from "lucide-react";
 import type { Application } from "@/types/applications";
 
 interface ApplicationsTableProps {
@@ -101,22 +109,51 @@ export const ApplicationsTable = ({
                   ? format(new Date(application.interview_date), "PPp")
                   : "Not scheduled"}
               </TableCell>
-              <TableCell className="space-x-2">
-                {application.status === "pending_review" && (
+              <TableCell>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Open menu</span>
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {application.status === "pending_review" && (
+                      <DropdownMenuItem
+                        onClick={() => onApplicationSelect(application.id)}
+                      >
+                        Schedule Interview
+                      </DropdownMenuItem>
+                    )}
+                    {application.status === "scheduled_interview" && (
+                      <>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onCompleteInterview(application.id, "verified", "")
+                          }
+                        >
+                          Approve & Verify
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() =>
+                            onCompleteInterview(application.id, "rejected", "")
+                          }
+                        >
+                          Reject
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {selectedApplication === application.id && (
                   <InterviewScheduler
                     applicationId={application.id}
                     onSchedule={onScheduleInterview}
-                    isOpen={selectedApplication === application.id}
+                    isOpen={true}
                     onOpenChange={(open) =>
                       onApplicationSelect(open ? application.id : null)
                     }
-                  />
-                )}
-
-                {application.status === "scheduled_interview" && (
-                  <InterviewComplete
-                    applicationId={application.id}
-                    onComplete={onCompleteInterview}
                   />
                 )}
               </TableCell>
