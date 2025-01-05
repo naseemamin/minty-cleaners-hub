@@ -1,54 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-type ApplicationStatus =
-  | "pending_review"
-  | "scheduled_interview"
-  | "interview_completed"
-  | "verified"
-  | "rejected";
-
-interface Application {
-  id: string;
-  cleaner_profile: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    mobile_number: string;
-  };
-  status: ApplicationStatus;
-  interview_date: string | null;
-  interview_notes: string | null;
-  created_at: string;
-}
+import { ApplicationsTable } from "@/components/admin/ApplicationsTable";
+import type { Application } from "@/types/applications";
 
 const AdminApplications = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedApplication, setSelectedApplication] = useState<string | null>(
     null
   );
-  const [notes, setNotes] = useState("");
   const queryClient = useQueryClient();
 
   const { data: applications, isLoading } = useQuery({
@@ -71,23 +31,19 @@ const AdminApplications = () => {
           )
         `
         )
-        .order("created_at", { ascending: false })
-        .single();
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      // Transform the data to match the Application interface
-      const transformedData = data ? [{
-        ...data,
-        cleaner_profile: {
-          first_name: data.cleaner_profile.first_name,
-          last_name: data.cleaner_profile.last_name,
-          email: data.cleaner_profile.email,
-          mobile_number: data.cleaner_profile.mobile_number
-        }
-      }] : [];
 
-      return transformedData as Application[];
+      return (data || []).map((item) => ({
+        ...item,
+        cleaner_profile: {
+          first_name: item.cleaner_profile.first_name,
+          last_name: item.cleaner_profile.last_name,
+          email: item.cleaner_profile.email,
+          mobile_number: item.cleaner_profile.mobile_number,
+        },
+      })) as Application[];
     },
   });
 
@@ -113,7 +69,6 @@ const AdminApplications = () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast.success("Interview scheduled successfully");
       setSelectedApplication(null);
-      setSelectedDate(undefined);
     },
     onError: (error) => {
       console.error("Error scheduling interview:", error);
@@ -128,7 +83,7 @@ const AdminApplications = () => {
       notes,
     }: {
       applicationId: string;
-      status: ApplicationStatus;
+      status: Application["status"];
       notes?: string;
     }) => {
       const { error } = await supabase
@@ -144,7 +99,6 @@ const AdminApplications = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast.success("Application status updated");
-      setNotes("");
     },
     onError: (error) => {
       console.error("Error updating status:", error);
@@ -159,123 +113,17 @@ const AdminApplications = () => {
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-2xl font-bold mb-6">Cleaner Applications</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Interview Date</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {applications?.map((application) => (
-            <TableRow key={application.id}>
-              <TableCell>
-                {application.cleaner_profile.first_name}{" "}
-                {application.cleaner_profile.last_name}
-              </TableCell>
-              <TableCell>{application.cleaner_profile.email}</TableCell>
-              <TableCell>{application.cleaner_profile.mobile_number}</TableCell>
-              <TableCell>{application.status}</TableCell>
-              <TableCell>
-                {application.interview_date
-                  ? format(new Date(application.interview_date), "PPp")
-                  : "Not scheduled"}
-              </TableCell>
-              <TableCell className="space-x-2">
-                {application.status === "pending_review" && (
-                  <Dialog
-                    open={selectedApplication === application.id}
-                    onOpenChange={(open) =>
-                      setSelectedApplication(open ? application.id : null)
-                    }
-                  >
-                    <DialogTrigger asChild>
-                      <Button variant="outline">Schedule Interview</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Schedule Interview</DialogTitle>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={setSelectedDate}
-                          className="rounded-md border"
-                        />
-                      </div>
-                      <Button
-                        onClick={() => {
-                          if (selectedDate) {
-                            scheduleInterview.mutate({
-                              applicationId: application.id,
-                              date: selectedDate,
-                            });
-                          }
-                        }}
-                        disabled={!selectedDate}
-                      >
-                        Confirm Schedule
-                      </Button>
-                    </DialogContent>
-                  </Dialog>
-                )}
-
-                {application.status === "scheduled_interview" && (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline">Complete Interview</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Interview Notes</DialogTitle>
-                      </DialogHeader>
-                      <div className="py-4">
-                        <Textarea
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Enter interview notes..."
-                          className="min-h-[100px]"
-                        />
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="default"
-                          onClick={() =>
-                            updateStatus.mutate({
-                              applicationId: application.id,
-                              status: "verified",
-                              notes,
-                            })
-                          }
-                        >
-                          Approve & Verify
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={() =>
-                            updateStatus.mutate({
-                              applicationId: application.id,
-                              status: "rejected",
-                              notes,
-                            })
-                          }
-                        >
-                          Reject
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <ApplicationsTable
+        applications={applications || []}
+        selectedApplication={selectedApplication}
+        onApplicationSelect={setSelectedApplication}
+        onScheduleInterview={(applicationId, date) =>
+          scheduleInterview.mutate({ applicationId, date })
+        }
+        onCompleteInterview={(applicationId, status, notes) =>
+          updateStatus.mutate({ applicationId, status, notes })
+        }
+      />
     </div>
   );
 };
