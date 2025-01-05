@@ -5,6 +5,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { ApplicationsTable } from "@/components/admin/ApplicationsTable";
 import type { Application } from "@/types/applications";
 
+interface ApplicationResponse {
+  id: string;
+  status: string;
+  interview_date: string | null;
+  interview_notes: string | null;
+  created_at: string;
+  cleaner_profiles: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    mobile_number: string;
+  };
+}
+
 const AdminApplications = () => {
   const [selectedApplication, setSelectedApplication] = useState<string | null>(
     null
@@ -35,7 +49,7 @@ const AdminApplications = () => {
 
       if (error) throw error;
 
-      return data.map((item: any) => ({
+      return (data as ApplicationResponse[]).map((item) => ({
         ...item,
         cleaner_profile: {
           first_name: item.cleaner_profiles.first_name,
