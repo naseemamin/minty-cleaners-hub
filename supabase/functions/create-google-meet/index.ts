@@ -17,6 +17,10 @@ interface GoogleCalendarEvent {
     dateTime: string
     timeZone: string
   }
+  attendees: {
+    email: string
+    responseStatus?: string
+  }[]
   conferenceData: {
     createRequest: {
       requestId: string
@@ -76,6 +80,8 @@ serve(async (req) => {
     const startTime = new Date(interviewDate)
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000) // Add 1 hour
 
+    const adminEmail = Deno.env.get('GMAIL_EMAIL')!
+
     // Create calendar event with Google Meet
     const event: GoogleCalendarEvent = {
       summary: `Interview with ${application.cleaner_profiles.first_name} ${application.cleaner_profiles.last_name}`,
@@ -88,6 +94,10 @@ serve(async (req) => {
         dateTime: endTime.toISOString(),
         timeZone: 'UTC',
       },
+      attendees: [
+        { email: adminEmail },
+        { email: application.cleaner_profiles.email }
+      ],
       conferenceData: {
         createRequest: {
           requestId: crypto.randomUUID(),
@@ -98,8 +108,15 @@ serve(async (req) => {
       }
     }
 
+    console.log('Creating calendar event with:', {
+      adminEmail,
+      applicantEmail: application.cleaner_profiles.email,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
+    })
+
     const calendarResponse = await fetch(
-      'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1',
+      'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
       {
         method: 'POST',
         headers: {
@@ -111,6 +128,7 @@ serve(async (req) => {
     )
 
     const calendarEvent = await calendarResponse.json()
+    console.log('Calendar event created:', calendarEvent)
 
     // Update application with Google Meet link
     const { error: updateError } = await supabase
