@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { session } = useAuth();
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -14,6 +18,17 @@ const Navbar = () => {
     { name: "Reviews", href: "#reviews" },
     { name: "Contact", href: "#contact" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.success("Logged out successfully");
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
+    }
+  };
 
   return (
     <nav className="bg-white fixed w-full z-50 shadow-sm">
@@ -44,16 +59,33 @@ const Navbar = () => {
             >
               Professionals
             </Button>
+            {session ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-600"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600"
+                onClick={() => navigate("/auth/login")}
+              >
+                <User className="h-4 w-4 mr-2" />
+                Login
+              </Button>
+            )}
             <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-gray-600"
-              onClick={() => navigate("/auth/login")}
+              className="bg-mint-500 hover:bg-mint-600 text-white"
+              onClick={() => navigate("/signup/quote")}
             >
-              <User className="h-4 w-4 mr-2" />
-              Login
-            </Button>
-            <Button className="bg-mint-500 hover:bg-mint-600 text-white">
               Get a Quote
             </Button>
           </div>
@@ -100,19 +132,40 @@ const Navbar = () => {
               >
                 Professionals
               </Button>
+              {session ? (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-600 justify-start"
+                  onClick={() => {
+                    handleLogout();
+                    setIsOpen(false);
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-600 justify-start"
+                  onClick={() => {
+                    navigate("/auth/login");
+                    setIsOpen(false);
+                  }}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              )}
               <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-gray-600 justify-start"
+                className="bg-mint-500 hover:bg-mint-600 text-white"
                 onClick={() => {
-                  navigate("/auth/login");
+                  navigate("/signup/quote");
                   setIsOpen(false);
                 }}
               >
-                <User className="h-4 w-4 mr-2" />
-                Login
-              </Button>
-              <Button className="bg-mint-500 hover:bg-mint-600 text-white">
                 Get a Quote
               </Button>
             </div>
