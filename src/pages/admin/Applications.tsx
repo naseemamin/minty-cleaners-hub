@@ -23,7 +23,7 @@ const AdminApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profile:cleaner_profiles!inner (
+          cleaner_profiles!inner (
             first_name,
             last_name,
             email,
@@ -35,13 +35,13 @@ const AdminApplications = () => {
 
       if (error) throw error;
 
-      return (data || []).map((item) => ({
+      return data.map((item) => ({
         ...item,
         cleaner_profile: {
-          first_name: item.cleaner_profile[0]?.first_name || "",
-          last_name: item.cleaner_profile[0]?.last_name || "",
-          email: item.cleaner_profile[0]?.email || "",
-          mobile_number: item.cleaner_profile[0]?.mobile_number || "",
+          first_name: item.cleaner_profiles.first_name,
+          last_name: item.cleaner_profiles.last_name,
+          email: item.cleaner_profiles.email,
+          mobile_number: item.cleaner_profiles.mobile_number,
         },
       })) as Application[];
     },

@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_process: {
+        Row: {
+          cleaner_id: string
+          created_at: string
+          id: string
+          interview_date: string | null
+          interview_notes: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          cleaner_id: string
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          interview_notes?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          cleaner_id?: string
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          interview_notes?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_process_cleaner_id_fkey"
+            columns: ["cleaner_id"]
+            isOneToOne: false
+            referencedRelation: "cleaner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           booking_date: string
@@ -310,6 +348,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      application_status:
+        | "pending_review"
+        | "scheduled_interview"
+        | "interview_completed"
+        | "verified"
+        | "rejected"
       booking_status: "pending" | "confirmed" | "completed" | "cancelled"
       cleaning_frequency: "more_than_weekly" | "weekly" | "biweekly" | "one_off"
       service_type:
