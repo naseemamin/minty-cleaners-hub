@@ -65,7 +65,6 @@ async function updateGoogleSheet(application: CleanerApplication) {
   console.log('Starting Google Sheets update with credentials:', {
     email: EMAIL,
     sheetId: SHEET_ID,
-    hasPassword: !!APP_PASSWORD
   });
 
   const row = [
@@ -84,14 +83,20 @@ async function updateGoogleSheet(application: CleanerApplication) {
   ];
 
   try {
-    const auth = new google.auth.JWT(
-      EMAIL,
-      undefined,
-      APP_PASSWORD,
-      ['https://www.googleapis.com/auth/spreadsheets']
+    // Create OAuth2 client
+    const oauth2Client = new google.auth.OAuth2(
+      null, // No client ID needed
+      null, // No client secret needed
+      'https://developers.google.com/oauthplayground'
     );
 
-    const sheets = google.sheets({ version: 'v4', auth });
+    // Set credentials directly
+    oauth2Client.setCredentials({
+      access_token: APP_PASSWORD, // Using APP_PASSWORD as access token
+      refresh_token: APP_PASSWORD // Using APP_PASSWORD as refresh token
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
     console.log('Attempting to append row to sheet:', SHEET_ID);
 
     const response = await sheets.spreadsheets.values.append({
