@@ -22,7 +22,6 @@ interface CleanerApplication {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -31,7 +30,6 @@ serve(async (req) => {
     const application: CleanerApplication = await req.json();
     console.log('Received application:', application);
 
-    // Update Google Sheet
     const sheetUpdated = await updateGoogleSheet(application);
     console.log('Google Sheet updated:', sheetUpdated);
 
@@ -56,17 +54,14 @@ serve(async (req) => {
 
 async function updateGoogleSheet(application: CleanerApplication) {
   const SHEET_ID = Deno.env.get('GOOGLE_SHEET_ID');
-  const CREDENTIALS = {
-    client_email: Deno.env.get('GMAIL_EMAIL'),
-    private_key: Deno.env.get('GMAIL_APP_PASSWORD'),
-  };
+  const EMAIL = Deno.env.get('GMAIL_EMAIL');
+  const APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD');
 
-  if (!SHEET_ID || !CREDENTIALS.client_email || !CREDENTIALS.private_key) {
+  if (!SHEET_ID || !EMAIL || !APP_PASSWORD) {
     console.error('Missing required environment variables');
     throw new Error('Missing required environment variables');
   }
 
-  // Format the data as a row
   const row = [
     application.id,
     application.first_name,
@@ -83,9 +78,9 @@ async function updateGoogleSheet(application: CleanerApplication) {
   ];
 
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: CREDENTIALS,
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    const auth = new google.auth.OAuth2();
+    auth.setCredentials({
+      refresh_token: APP_PASSWORD
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
@@ -104,6 +99,6 @@ async function updateGoogleSheet(application: CleanerApplication) {
     return true;
   } catch (error) {
     console.error('Error updating sheet:', error);
-    throw error; // Re-throw to be caught by the main handler
+    throw error;
   }
 }
