@@ -119,11 +119,19 @@ export const ApplicationsTable = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {application.status === "pending_review" && (
-                      <DropdownMenuItem
-                        onClick={() => onApplicationSelect(application.id)}
-                      >
-                        Schedule Interview
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem
+                          onClick={() => onApplicationSelect(application.id)}
+                        >
+                          Schedule Interview
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => onCompleteInterview(application.id, "rejected", "Rejected without interview")}
+                          className="text-destructive"
+                        >
+                          Reject Application
+                        </DropdownMenuItem>
+                      </>
                     )}
                     {application.status === "scheduled_interview" && (
                       <DropdownMenuItem
