@@ -56,10 +56,13 @@ serve(async (req) => {
 
 async function updateGoogleSheet(application: CleanerApplication) {
   const SHEET_ID = Deno.env.get('GOOGLE_SHEET_ID');
-  const GMAIL_EMAIL = Deno.env.get('GMAIL_EMAIL');
-  const GMAIL_APP_PASSWORD = Deno.env.get('GMAIL_APP_PASSWORD');
+  const CREDENTIALS = {
+    client_email: Deno.env.get('GMAIL_EMAIL'),
+    private_key: Deno.env.get('GMAIL_APP_PASSWORD'),
+  };
 
-  if (!SHEET_ID || !GMAIL_EMAIL || !GMAIL_APP_PASSWORD) {
+  if (!SHEET_ID || !CREDENTIALS.client_email || !CREDENTIALS.private_key) {
+    console.error('Missing required environment variables');
     throw new Error('Missing required environment variables');
   }
 
@@ -80,14 +83,15 @@ async function updateGoogleSheet(application: CleanerApplication) {
   ];
 
   try {
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({
-      access_token: GMAIL_APP_PASSWORD
+    const auth = new google.auth.GoogleAuth({
+      credentials: CREDENTIALS,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
     const sheets = google.sheets({ version: 'v4', auth });
+    console.log('Attempting to append row to sheet:', SHEET_ID);
 
-    await sheets.spreadsheets.values.append({
+    const response = await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: 'Sheet1!A:L',
       valueInputOption: 'RAW',
@@ -96,9 +100,10 @@ async function updateGoogleSheet(application: CleanerApplication) {
       }
     });
 
+    console.log('Sheet update response:', response.data);
     return true;
   } catch (error) {
     console.error('Error updating sheet:', error);
-    return false;
+    throw error; // Re-throw to be caught by the main handler
   }
 }
