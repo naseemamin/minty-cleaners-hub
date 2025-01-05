@@ -26,7 +26,7 @@ const App = () => (
             <Route 
               path="/signup/quote" 
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="customer">
                   <QuoteForm />
                 </ProtectedRoute>
               } 
