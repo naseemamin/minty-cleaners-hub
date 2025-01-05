@@ -80,15 +80,25 @@ async function updateGoogleSheet(application: CleanerApplication) {
 
   try {
     // Parse the service account credentials
-    const credentials = JSON.parse(CREDENTIALS);
+    let credentials;
+    try {
+      credentials = JSON.parse(CREDENTIALS);
+    } catch (e) {
+      console.error('Error parsing credentials:', e);
+      throw new Error('Invalid service account credentials format');
+    }
+
+    if (!credentials.client_email || !credentials.private_key) {
+      console.error('Missing required credential fields');
+      throw new Error('Invalid service account credentials: missing required fields');
+    }
     
     // Create JWT client
-    const auth = new google.auth.JWT(
-      credentials.client_email,
-      undefined,
-      credentials.private_key,
-      ['https://www.googleapis.com/auth/spreadsheets']
-    );
+    const auth = new google.auth.JWT({
+      email: credentials.client_email,
+      key: credentials.private_key,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
 
     const sheets = google.sheets({ version: 'v4', auth });
     console.log('Attempting to append row to sheet:', SHEET_ID);
