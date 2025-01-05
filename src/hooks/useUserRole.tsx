@@ -26,7 +26,9 @@ export const useUserRole = () => {
 
         if (error) throw error;
         
-        setRole(data?.roles?.name as UserRole || null);
+        // Safely access the role name from the response data
+        const roleName = data?.roles?.name as UserRole;
+        setRole(roleName || null);
       } catch (error) {
         console.error("Error fetching user role:", error);
         setRole(null);
