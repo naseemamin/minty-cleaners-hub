@@ -21,14 +21,14 @@ export const FrequencySelector = ({ frequency, onUpdate }: FrequencySelectorProp
       <p className="text-sm text-muted-foreground mb-2">
         You can keep the same cleaner for recurring cleans. You can change or cancel any time.
       </p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {frequencies.map((option) => (
           <Button
             key={option.value}
             type="button"
             variant={frequency === option.value ? "default" : "outline"}
             onClick={() => onUpdate(option.value)}
-            className="w-full"
+            className="w-full h-[50px] text-sm px-2"
           >
             {option.label}
           </Button>

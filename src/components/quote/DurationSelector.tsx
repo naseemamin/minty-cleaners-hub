@@ -18,7 +18,7 @@ export const DurationSelector = ({ duration, recommendedDuration, onUpdate }: Du
       <p className="text-sm text-muted-foreground mb-2">
         We recommend selecting {recommendedDuration} hours based on your bedrooms, bathrooms and extra tasks
       </p>
-      <ScrollArea className="h-[70px] w-full rounded-md">
+      <ScrollArea className="h-[120px] w-full rounded-md">
         <div className="flex flex-wrap gap-2 p-1">
           {durations.map((hours) => (
             <Button
@@ -26,7 +26,7 @@ export const DurationSelector = ({ duration, recommendedDuration, onUpdate }: Du
               type="button"
               variant={duration === hours ? "default" : "outline"}
               onClick={() => onUpdate(hours)}
-              className="flex-shrink-0"
+              className="flex-shrink-0 w-[70px]"
             >
               {hours}h
             </Button>

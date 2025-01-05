@@ -115,7 +115,7 @@ const QuoteForm = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-6">
+      <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">
