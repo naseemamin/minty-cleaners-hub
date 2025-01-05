@@ -13,6 +13,7 @@ export type Database = {
         Row: {
           cleaner_id: string
           created_at: string
+          google_meet_link: string | null
           id: string
           interview_date: string | null
           interview_notes: string | null
@@ -22,6 +23,7 @@ export type Database = {
         Insert: {
           cleaner_id: string
           created_at?: string
+          google_meet_link?: string | null
           id?: string
           interview_date?: string | null
           interview_notes?: string | null
@@ -31,6 +33,7 @@ export type Database = {
         Update: {
           cleaner_id?: string
           created_at?: string
+          google_meet_link?: string | null
           id?: string
           interview_date?: string | null
           interview_notes?: string | null

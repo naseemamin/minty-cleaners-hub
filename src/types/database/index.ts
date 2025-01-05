@@ -2,17 +2,20 @@ import type { Database as AuthDatabase } from './auth'
 import type { Database as ProfilesDatabase } from './profiles'
 import type { Database as ServicesDatabase } from './services'
 import type { Database as BookingsDatabase } from './bookings'
+import type { Database as ApplicationsDatabase } from './applications'
 
 export interface Database {
   public: {
     Tables: AuthDatabase['public']['Tables'] &
       ProfilesDatabase['public']['Tables'] &
       ServicesDatabase['public']['Tables'] &
-      BookingsDatabase['public']['Tables']
+      BookingsDatabase['public']['Tables'] &
+      ApplicationsDatabase['public']['Tables']
     Enums: AuthDatabase['public']['Enums'] &
       ProfilesDatabase['public']['Enums'] &
       ServicesDatabase['public']['Enums'] &
-      BookingsDatabase['public']['Enums']
+      BookingsDatabase['public']['Enums'] &
+      ApplicationsDatabase['public']['Enums']
   }
 }
 
