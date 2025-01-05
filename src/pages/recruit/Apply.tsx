@@ -42,6 +42,8 @@ const Apply = () => {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      console.log('Submitting application with values:', values);
+      
       const { error } = await supabase
         .from('cleaner_profiles')
         .insert([{
@@ -61,7 +63,7 @@ const Apply = () => {
 
       if (error) {
         console.error('Error submitting application:', error);
-        toast.error("Failed to submit application. Please try again.");
+        toast.error(`Failed to submit application: ${error.message}`);
         return;
       }
 
