@@ -100,6 +100,13 @@ serve(async (req) => {
     const adminEmail = Deno.env.get('GMAIL_EMAIL')!
     console.log('Admin email:', adminEmail)
 
+    console.log('Creating calendar event with:', {
+      adminEmail,
+      applicantEmail: application.cleaner_profiles.email,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
+    })
+
     // Create calendar event with Google Meet
     const event: GoogleCalendarEvent = {
       summary: `Interview with ${application.cleaner_profiles.first_name} ${application.cleaner_profiles.last_name}`,
@@ -125,13 +132,6 @@ serve(async (req) => {
         }
       }
     }
-
-    console.log('Creating calendar event with:', {
-      adminEmail,
-      applicantEmail: application.cleaner_profiles.email,
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString()
-    })
 
     const calendarResponse = await fetch(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
