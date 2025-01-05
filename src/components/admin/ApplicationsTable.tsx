@@ -30,6 +30,14 @@ export const ApplicationsTable = ({
   onScheduleInterview,
   onCompleteInterview,
 }: ApplicationsTableProps) => {
+  if (!applications || applications.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-500">
+        No applications found
+      </div>
+    );
+  }
+
   return (
     <Table>
       <TableHeader>
@@ -43,14 +51,14 @@ export const ApplicationsTable = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {applications?.map((application) => (
+        {applications.map((application) => (
           <TableRow key={application.id}>
             <TableCell>
-              {application.cleaner_profile.first_name}{" "}
-              {application.cleaner_profile.last_name}
+              {application.cleaner_profile?.first_name}{" "}
+              {application.cleaner_profile?.last_name}
             </TableCell>
-            <TableCell>{application.cleaner_profile.email}</TableCell>
-            <TableCell>{application.cleaner_profile.mobile_number}</TableCell>
+            <TableCell>{application.cleaner_profile?.email}</TableCell>
+            <TableCell>{application.cleaner_profile?.mobile_number}</TableCell>
             <TableCell>{application.status}</TableCell>
             <TableCell>
               {application.interview_date
