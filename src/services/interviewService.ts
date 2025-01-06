@@ -23,7 +23,7 @@ export const updateApplicationStatus = async (
       interview_date,
       interview_notes,
       created_at,
-      cleaner_profile:cleaner_profiles(
+      cleaner_profile:cleaner_profiles!inner(
         first_name,
         last_name,
         email,
@@ -38,15 +38,24 @@ export const updateApplicationStatus = async (
         commitment_length
       )
     `)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error updating application status:", error);
     throw error;
   }
 
+  if (!data) {
+    throw new Error(`Application with ID ${applicationId} not found`);
+  }
+
   console.log("Application status updated:", data);
-  return data;
+  return {
+    ...data,
+    cleaner_profile: Array.isArray(data.cleaner_profile) 
+      ? data.cleaner_profile[0] 
+      : data.cleaner_profile
+  };
 };
 
 export const updateGoogleMeetLink = async (applicationId: string, meetLink: string) => {
@@ -57,11 +66,15 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
     .update({ google_meet_link: meetLink })
     .eq("id", applicationId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error updating Google Meet link:", error);
     throw error;
+  }
+
+  if (!data) {
+    throw new Error(`Application with ID ${applicationId} not found`);
   }
 
   console.log("Google Meet link updated:", data);
