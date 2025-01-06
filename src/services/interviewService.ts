@@ -8,6 +8,23 @@ export const updateApplicationStatus = async (
 ) => {
   console.log("Updating application status:", { applicationId, status, interviewDate });
   
+  // First check if the application exists
+  const { data: existingApp, error: checkError } = await supabase
+    .from("application_process")
+    .select("id")
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Error checking application:", checkError);
+    throw checkError;
+  }
+
+  if (!existingApp) {
+    throw new Error(`Application with ID ${applicationId} not found`);
+  }
+
+  // Proceed with update only if application exists
   const updateData = {
     status,
     ...(interviewDate && { interview_date: interviewDate }),
@@ -46,7 +63,7 @@ export const updateApplicationStatus = async (
   }
 
   if (!data) {
-    throw new Error(`Application with ID ${applicationId} not found`);
+    throw new Error(`Failed to update application with ID ${applicationId}`);
   }
 
   const defaultProfile = {
@@ -76,6 +93,23 @@ export const updateApplicationStatus = async (
 export const updateGoogleMeetLink = async (applicationId: string, meetLink: string) => {
   console.log("Updating Google Meet link:", { applicationId, meetLink });
   
+  // First check if the application exists
+  const { data: existingApp, error: checkError } = await supabase
+    .from("application_process")
+    .select("id")
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Error checking application:", checkError);
+    throw checkError;
+  }
+
+  if (!existingApp) {
+    throw new Error(`Application with ID ${applicationId} not found`);
+  }
+
+  // Proceed with update only if application exists
   const { data, error } = await supabase
     .from("application_process")
     .update({ google_meet_link: meetLink })
@@ -93,7 +127,7 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
   }
 
   if (!data) {
-    throw new Error(`Application with ID ${applicationId} not found`);
+    throw new Error(`Failed to update Google Meet link for application ${applicationId}`);
   }
 
   return data;
