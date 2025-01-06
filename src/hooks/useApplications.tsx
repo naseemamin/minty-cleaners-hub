@@ -78,11 +78,11 @@ export const useApplications = () => {
       try {
         console.log("Starting interview scheduling process...");
         
-        // First update the application status and date
+        // Update the application status and date
         const { error: updateError } = await supabase
           .from("application_process")
           .update({
-            status: "scheduled_interview" as ApplicationStatus,
+            status: "scheduled_interview",
             interview_date: date.toISOString(),
           })
           .eq("id", applicationId);
@@ -94,7 +94,7 @@ export const useApplications = () => {
 
         console.log("Application status updated successfully");
         
-        // Then create the Google Meet event
+        // Create the Google Meet event
         const { data: calendarData, error: calendarError } = await supabase.functions.invoke(
           "create-google-meet",
           {
@@ -112,7 +112,7 @@ export const useApplications = () => {
           await supabase
             .from("application_process")
             .update({
-              status: "pending_review" as ApplicationStatus,
+              status: "pending_review",
               interview_date: null,
             })
             .eq("id", applicationId);

@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,15 +44,19 @@ export const InterviewScheduler = ({
       const [hours, minutes] = selectedTime.split(":").map(Number);
       const dateWithTime = new Date(selectedDate);
       dateWithTime.setHours(hours, minutes);
+      
+      console.log("Scheduling interview for:", {
+        applicationId,
+        date: dateWithTime
+      });
+      
       onSchedule(applicationId, dateWithTime);
+      onOpenChange(false); // Close the dialog after scheduling
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Schedule Interview</Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Schedule Interview</DialogTitle>
@@ -80,13 +83,14 @@ export const InterviewScheduler = ({
               </SelectContent>
             </Select>
           </div>
+          <Button
+            onClick={handleSchedule}
+            disabled={!selectedDate || !selectedTime}
+            className="w-full"
+          >
+            Confirm Schedule
+          </Button>
         </div>
-        <Button
-          onClick={handleSchedule}
-          disabled={!selectedDate || !selectedTime}
-        >
-          Confirm Schedule
-        </Button>
       </DialogContent>
     </Dialog>
   );
