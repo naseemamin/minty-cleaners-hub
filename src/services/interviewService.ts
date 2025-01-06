@@ -13,25 +13,6 @@ export const updateApplicationStatus = async (
     ...(interviewDate && { interview_date: interviewDate }),
   };
 
-  // First check if the application exists
-  const { data: existingApp, error: checkError } = await supabase
-    .from("application_process")
-    .select("id")
-    .eq("id", applicationId)
-    .maybeSingle();
-
-  if (checkError) {
-    console.error("Error checking application:", checkError);
-    throw checkError;
-  }
-
-  if (!existingApp) {
-    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
-    console.error(notFoundError);
-    throw notFoundError;
-  }
-
-  // If application exists, proceed with update
   const { data, error } = await supabase
     .from("application_process")
     .update(updateData)
@@ -42,7 +23,7 @@ export const updateApplicationStatus = async (
       interview_date,
       interview_notes,
       created_at,
-      cleaner_profile:cleaner_profiles(
+      cleaner_profile:cleaner_profiles!inner(
         first_name,
         last_name,
         email,
@@ -61,64 +42,49 @@ export const updateApplicationStatus = async (
 
   if (error) {
     console.error("Error updating application:", error);
+    if (error.code === 'PGRST116') {
+      throw new Error(`Application with ID ${applicationId} not found`);
+    }
     throw error;
   }
 
-  const defaultProfile = {
-    first_name: "",
-    last_name: "",
-    email: "",
-    mobile_number: "",
-    gender: "",
-    postcode: "",
-    years_experience: "",
-    cleaning_types: [],
-    experience_description: "",
-    desired_hours_per_week: 0,
-    available_days: [],
-    commitment_length: ""
-  };
+  if (!data) {
+    throw new Error(`Application with ID ${applicationId} not found`);
+  }
 
+  // Transform the response to match the expected format
   return {
     ...data,
-    cleaner_profile: Array.isArray(data?.cleaner_profile) && data.cleaner_profile.length > 0
-      ? data.cleaner_profile[0]
-      : defaultProfile
+    cleaner_profile: Array.isArray(data.cleaner_profile) 
+      ? data.cleaner_profile[0] 
+      : data.cleaner_profile
   };
 };
 
 export const updateGoogleMeetLink = async (applicationId: string, meetLink: string) => {
   console.log("Updating Google Meet link:", { applicationId, meetLink });
   
-  // First check if the application exists
-  const { data: existingApp, error: checkError } = await supabase
-    .from("application_process")
-    .select("id")
-    .eq("id", applicationId)
-    .maybeSingle();
-
-  if (checkError) {
-    console.error("Error checking application:", checkError);
-    throw checkError;
-  }
-
-  if (!existingApp) {
-    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
-    console.error(notFoundError);
-    throw notFoundError;
-  }
-
-  // If application exists, proceed with update
   const { data, error } = await supabase
     .from("application_process")
     .update({ google_meet_link: meetLink })
     .eq("id", applicationId)
-    .select()
+    .select(`
+      id,
+      google_meet_link,
+      cleaner_profile:cleaner_profiles!inner(id)
+    `)
     .maybeSingle();
 
   if (error) {
     console.error("Error updating Google Meet link:", error);
+    if (error.code === 'PGRST116') {
+      throw new Error(`Application with ID ${applicationId} not found`);
+    }
     throw error;
+  }
+
+  if (!data) {
+    throw new Error(`Application with ID ${applicationId} not found`);
   }
 
   return data;
