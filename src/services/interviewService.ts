@@ -23,7 +23,7 @@ export const updateApplicationStatus = async (
       interview_date,
       interview_notes,
       created_at,
-      cleaner_profile:cleaner_profiles!inner(
+      cleaner_profile:cleaner_profiles(
         first_name,
         last_name,
         email,
@@ -42,9 +42,6 @@ export const updateApplicationStatus = async (
 
   if (error) {
     console.error("Error updating application:", error);
-    if (error.code === 'PGRST116') {
-      throw new Error(`Application with ID ${applicationId} not found`);
-    }
     throw error;
   }
 
@@ -52,12 +49,27 @@ export const updateApplicationStatus = async (
     throw new Error(`Application with ID ${applicationId} not found`);
   }
 
+  const defaultProfile = {
+    first_name: "",
+    last_name: "",
+    email: "",
+    mobile_number: "",
+    gender: "",
+    postcode: "",
+    years_experience: "",
+    cleaning_types: [],
+    experience_description: "",
+    desired_hours_per_week: 0,
+    available_days: [],
+    commitment_length: ""
+  };
+
   // Transform the response to match the expected format
   return {
     ...data,
-    cleaner_profile: Array.isArray(data.cleaner_profile) 
-      ? data.cleaner_profile[0] 
-      : data.cleaner_profile
+    cleaner_profile: Array.isArray(data.cleaner_profile) && data.cleaner_profile.length > 0
+      ? data.cleaner_profile[0]
+      : defaultProfile
   };
 };
 
@@ -71,15 +83,12 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
     .select(`
       id,
       google_meet_link,
-      cleaner_profile:cleaner_profiles!inner(id)
+      cleaner_profile:cleaner_profiles(id)
     `)
     .maybeSingle();
 
   if (error) {
     console.error("Error updating Google Meet link:", error);
-    if (error.code === 'PGRST116') {
-      throw new Error(`Application with ID ${applicationId} not found`);
-    }
     throw error;
   }
 
