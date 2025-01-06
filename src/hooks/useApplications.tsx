@@ -1,29 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Application, ApplicationStatus } from "@/types/applications";
-
-interface ApplicationResponse {
-  id: string;
-  status: ApplicationStatus;
-  interview_date: string | null;
-  interview_notes: string | null;
-  created_at: string;
-  cleaner_profile: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    mobile_number: string;
-    gender: string | null;
-    postcode: string;
-    years_experience: string;
-    cleaning_types: string[] | null;
-    experience_description: string;
-    desired_hours_per_week: number;
-    available_days: string[];
-    commitment_length: string;
-  };
-}
+import type { Application } from "@/types/applications";
+import { updateApplicationStatus, updateGoogleMeetLink } from "@/services/interviewService";
+import { createGoogleMeetEvent } from "@/services/googleCalendarService";
 
 export const useApplications = () => {
   const queryClient = useQueryClient();
@@ -63,7 +43,7 @@ export const useApplications = () => {
       }
 
       console.log("Fetched applications:", data);
-      return data as unknown as ApplicationResponse[];
+      return data;
     },
   });
 
@@ -76,95 +56,31 @@ export const useApplications = () => {
       date: Date;
     }) => {
       try {
-        console.log("Starting interview scheduling process...", {
+        // Step 1: Update application status and interview date
+        const updatedApp = await updateApplicationStatus(
           applicationId,
-          date: date.toISOString(),
-          status: "scheduled_interview"
-        });
-        
-        // First, let's verify we can read the current application
-        const { data: currentApp, error: readError } = await supabase
-          .from("application_process")
-          .select("*")
-          .eq("id", applicationId)
-          .single();
-          
-        if (readError) {
-          console.error("Error reading current application:", readError);
-          throw readError;
-        }
-        
-        console.log("Current application state:", currentApp);
-        
-        // Update the application status and date
-        const { data: updateData, error: updateError } = await supabase
-          .from("application_process")
-          .update({
-            status: "scheduled_interview" as const,
-            interview_date: date.toISOString(),
-          })
-          .eq("id", applicationId)
-          .select();
-
-        if (updateError) {
-          console.error("Error updating application:", updateError);
-          throw updateError;
-        }
-
-        console.log("Application update response:", updateData);
-        
-        // Create the Google Meet event
-        const { data: calendarData, error: calendarError } = await supabase.functions.invoke(
-          "create-google-meet",
-          {
-            body: {
-              applicationId,
-              interviewDate: date.toISOString(),
-            },
-          }
+          "scheduled_interview",
+          date.toISOString()
         );
 
-        if (calendarError || !calendarData.success) {
-          console.error("Error creating calendar event:", calendarError || calendarData.error);
-          
-          // Revert the status if calendar creation fails
-          await supabase
-            .from("application_process")
-            .update({
-              status: "pending_review",
-              interview_date: null,
-            })
-            .eq("id", applicationId);
-            
-          throw new Error(calendarData.error || "Failed to create calendar event");
-        }
+        // Step 2: Create Google Meet event
+        const calendarData = await createGoogleMeetEvent(
+          applicationId,
+          date.toISOString()
+        );
 
-        console.log("Calendar event created successfully:", calendarData);
+        // Step 3: Update application with Google Meet link
+        await updateGoogleMeetLink(applicationId, calendarData.meetLink);
 
-        // Update the application with the Google Meet link
-        const { error: linkUpdateError } = await supabase
-          .from("application_process")
-          .update({
-            google_meet_link: calendarData.meetLink,
-          })
-          .eq("id", applicationId)
-          .select();
-
-        if (linkUpdateError) {
-          console.error("Error updating meet link:", linkUpdateError);
-          throw linkUpdateError;
-        }
-
-        // Force a refetch of the applications data
-        await queryClient.invalidateQueries({ queryKey: ["applications"] });
-        
         return { applicationId, date, meetLink: calendarData.meetLink };
       } catch (error) {
-        console.error("Error in scheduleInterview:", error);
+        // Revert status if any step fails
+        await updateApplicationStatus(applicationId, "pending_review");
         throw error;
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast.success("Interview scheduled successfully");
     },
     onError: (error) => {
@@ -193,7 +109,6 @@ export const useApplications = () => {
 
       if (error) throw error;
       
-      // Force a refetch of the applications data
       await queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
     onSuccess: () => {
