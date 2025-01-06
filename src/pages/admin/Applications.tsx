@@ -36,6 +36,7 @@ const AdminApplications = () => {
   const { data: applications, isLoading } = useQuery({
     queryKey: ["applications"],
     queryFn: async () => {
+      console.log("Fetching applications...");
       const { data, error } = await supabase
         .from("application_process")
         .select(
@@ -63,8 +64,12 @@ const AdminApplications = () => {
         )
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching applications:", error);
+        throw error;
+      }
 
+      console.log("Fetched applications:", data);
       return data as unknown as ApplicationResponse[];
     },
   });
@@ -78,19 +83,28 @@ const AdminApplications = () => {
       date: Date;
     }) => {
       try {
+        console.log("Starting interview scheduling process...");
+        
         // First, update the database
-        const { error: dbError } = await supabase
+        const { data: updatedApplication, error: dbError } = await supabase
           .from("application_process")
           .update({
             status: "scheduled_interview",
             interview_date: date.toISOString(),
           })
-          .eq("id", applicationId);
+          .eq("id", applicationId)
+          .select()
+          .single();
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error("Database update error:", dbError);
+          throw dbError;
+        }
+
+        console.log("Database updated successfully:", updatedApplication);
 
         // Then, create the calendar event
-        console.log("Invoking create-google-meet function...");
+        console.log("Creating Google Meet event...");
         const { data: functionData, error: functionError } = await supabase.functions.invoke(
           "create-google-meet",
           {
@@ -106,9 +120,9 @@ const AdminApplications = () => {
           throw new Error("Failed to create calendar event");
         }
 
-        console.log("Calendar event created:", functionData);
+        console.log("Calendar event created successfully:", functionData);
 
-        // Immediately refetch the applications to update the UI
+        // Immediately invalidate and refetch the applications query
         await queryClient.invalidateQueries({ queryKey: ["applications"] });
         
         return { applicationId, date, functionData };
