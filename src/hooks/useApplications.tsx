@@ -95,7 +95,7 @@ export const useApplications = () => {
         console.log("Database updated successfully");
 
         // Then create the Google Meet event
-        const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        const functionResponse = await supabase.functions.invoke(
           "create-google-meet",
           {
             body: {
@@ -105,13 +105,14 @@ export const useApplications = () => {
           }
         );
 
-        if (functionError) {
-          console.error("Error creating calendar event:", functionError);
+        if (functionResponse.error) {
+          console.error("Error creating calendar event:", functionResponse.error);
           throw new Error("Failed to create calendar event");
         }
 
-        console.log("Calendar event created successfully:", functionData);
-        return { applicationId, date, functionData };
+        const meetData = functionResponse.data;
+        console.log("Calendar event created successfully:", meetData);
+        return { applicationId, date, meetData };
       } catch (error) {
         console.error("Error in scheduleInterview:", error);
         throw error;
