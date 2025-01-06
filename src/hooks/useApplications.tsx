@@ -78,7 +78,6 @@ export const useApplications = () => {
       try {
         console.log("Starting interview scheduling process...");
         
-        // First update the application status and date
         const { error: updateError } = await supabase
           .from("application_process")
           .update({
@@ -94,7 +93,6 @@ export const useApplications = () => {
 
         console.log("Database updated successfully");
 
-        // Then create the Google Meet event
         const { data, error } = await supabase.functions.invoke(
           "create-google-meet",
           {
@@ -137,15 +135,48 @@ export const useApplications = () => {
       status: Application["status"];
       notes?: string;
     }) => {
-      const { error } = await supabase
+      // First, get the cleaner_id from the application
+      const { data: applicationData, error: fetchError } = await supabase
         .from("application_process")
-        .update({
-          status,
-          interview_notes: notes,
-        })
-        .eq("id", applicationId);
+        .select("cleaner_id")
+        .eq("id", applicationId)
+        .single();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
+
+      // Start a batch of updates
+      const updates = [];
+
+      // Update application status
+      updates.push(
+        supabase
+          .from("application_process")
+          .update({
+            status,
+            interview_notes: notes,
+          })
+          .eq("id", applicationId)
+      );
+
+      // If status is rejected, update cleaner profile verified status to false
+      if (status === "rejected" && applicationData?.cleaner_id) {
+        updates.push(
+          supabase
+            .from("cleaner_profiles")
+            .update({ verified: false })
+            .eq("id", applicationData.cleaner_id)
+        );
+      }
+
+      // Execute all updates
+      const results = await Promise.all(updates);
+
+      // Check for errors
+      const errors = results.filter((result) => result.error);
+      if (errors.length > 0) {
+        console.error("Errors updating status:", errors);
+        throw errors[0].error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
