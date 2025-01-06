@@ -46,8 +46,9 @@ export const updateApplicationStatus = async (
   }
 
   if (!data) {
-    console.error(`Application with ID ${applicationId} not found`);
-    throw new Error(`Application with ID ${applicationId} not found`);
+    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
+    console.error(notFoundError);
+    throw notFoundError;
   }
 
   const defaultProfile = {
@@ -92,7 +93,9 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
   }
 
   if (!data) {
-    throw new Error(`Application with ID ${applicationId} not found`);
+    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
+    console.error(notFoundError);
+    throw notFoundError;
   }
 
   return data;
