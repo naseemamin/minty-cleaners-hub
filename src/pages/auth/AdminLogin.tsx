@@ -11,10 +11,9 @@ interface RoleData {
 }
 
 interface UserRoleResponse {
-  data: {
-    role_id: RoleData;
-  } | null;
-  error: Error | null;
+  role_id: {
+    name: string;
+  };
 }
 
 const AdminLogin = () => {
@@ -35,7 +34,9 @@ const AdminLogin = () => {
           return;
         }
 
-        if (userRoles?.role_id?.name === 'admin') {
+        const roleData = userRoles as UserRoleResponse;
+
+        if (roleData?.role_id?.name === 'admin') {
           navigate("/admin/applications");
         } else {
           toast.error("Access denied. Admin privileges required.");

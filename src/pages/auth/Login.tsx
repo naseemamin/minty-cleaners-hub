@@ -11,10 +11,9 @@ interface RoleData {
 }
 
 interface UserRoleResponse {
-  data: {
-    role_id: RoleData;
-  } | null;
-  error: Error | null;
+  role_id: {
+    name: string;
+  };
 }
 
 const Login = () => {
@@ -35,7 +34,9 @@ const Login = () => {
           return;
         }
 
-        if (userRoles?.role_id?.name === 'admin') {
+        const roleData = userRoles as UserRoleResponse;
+
+        if (roleData?.role_id?.name === 'admin') {
           toast.error("Please use the admin portal to login");
           await supabase.auth.signOut();
           navigate("/auth/admin-login");
