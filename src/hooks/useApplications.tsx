@@ -2,8 +2,28 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Application, ApplicationStatus } from "@/types/applications";
-import { updateApplicationStatus, updateGoogleMeetLink } from "@/services/interviewService";
-import { createGoogleMeetEvent } from "@/services/googleCalendarService";
+
+interface ApplicationResponse {
+  id: string;
+  status: ApplicationStatus;
+  interview_date: string | null;
+  interview_notes: string | null;
+  created_at: string;
+  cleaner_profile: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    mobile_number: string;
+    gender: string | null;
+    postcode: string;
+    years_experience: string;
+    cleaning_types: string[] | null;
+    experience_description: string;
+    desired_hours_per_week: number;
+    available_days: string[];
+    commitment_length: string;
+  };
+}
 
 export const useApplications = () => {
   const queryClient = useQueryClient();
@@ -42,29 +62,8 @@ export const useApplications = () => {
         throw error;
       }
 
-      // Transform the data to match the Application type
-      const transformedData = data.map(app => ({
-        ...app,
-        cleaner_profile: Array.isArray(app.cleaner_profile) && app.cleaner_profile.length > 0
-          ? app.cleaner_profile[0]
-          : {
-              first_name: "",
-              last_name: "",
-              email: "",
-              mobile_number: "",
-              gender: "",
-              postcode: "",
-              years_experience: "",
-              cleaning_types: [],
-              experience_description: "",
-              desired_hours_per_week: 0,
-              available_days: [],
-              commitment_length: ""
-            }
-      }));
-
-      console.log("Fetched applications:", transformedData);
-      return transformedData as Application[];
+      console.log("Fetched applications:", data);
+      return data as unknown as ApplicationResponse[];
     },
   });
 
@@ -77,26 +76,44 @@ export const useApplications = () => {
       date: Date;
     }) => {
       try {
-        // Step 1: Update application status and interview date
-        const updatedApp = await updateApplicationStatus(
-          applicationId,
-          "scheduled_interview",
-          date.toISOString()
+        console.log("Starting interview scheduling process...");
+        
+        // First update the application status and date
+        const { error: updateError } = await supabase
+          .from("application_process")
+          .update({
+            status: "scheduled_interview",
+            interview_date: date.toISOString(),
+          })
+          .eq("id", applicationId);
+
+        if (updateError) {
+          console.error("Error updating application:", updateError);
+          throw updateError;
+        }
+
+        console.log("Database updated successfully");
+
+        // Then create the Google Meet event
+        const { data, error } = await supabase.functions.invoke(
+          "create-google-meet",
+          {
+            body: {
+              applicationId,
+              interviewDate: date.toISOString(),
+            },
+          }
         );
 
-        // Step 2: Create Google Meet event
-        const calendarData = await createGoogleMeetEvent(
-          applicationId,
-          date.toISOString()
-        );
+        if (error || !data.success) {
+          console.error("Error creating calendar event:", error || data.error);
+          throw new Error(data.error || "Failed to create calendar event");
+        }
 
-        // Step 3: Update application with Google Meet link
-        await updateGoogleMeetLink(applicationId, calendarData.meetLink);
-
-        return { applicationId, date, meetLink: calendarData.meetLink };
+        console.log("Calendar event created successfully:", data);
+        return { applicationId, date, meetLink: data.meetLink };
       } catch (error) {
-        // Revert status if any step fails
-        await updateApplicationStatus(applicationId, "pending_review");
+        console.error("Error in scheduleInterview:", error);
         throw error;
       }
     },
@@ -117,7 +134,7 @@ export const useApplications = () => {
       notes,
     }: {
       applicationId: string;
-      status: ApplicationStatus;
+      status: Application["status"];
       notes?: string;
     }) => {
       const { error } = await supabase
@@ -129,8 +146,6 @@ export const useApplications = () => {
         .eq("id", applicationId);
 
       if (error) throw error;
-      
-      await queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
