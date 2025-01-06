@@ -17,27 +17,7 @@ export const updateApplicationStatus = async (
     .from("application_process")
     .update(updateData)
     .eq("id", applicationId)
-    .select(`
-      id,
-      status,
-      interview_date,
-      interview_notes,
-      created_at,
-      cleaner_profile:cleaner_profiles(
-        first_name,
-        last_name,
-        email,
-        mobile_number,
-        gender,
-        postcode,
-        years_experience,
-        cleaning_types,
-        experience_description,
-        desired_hours_per_week,
-        available_days,
-        commitment_length
-      )
-    `)
+    .select()
     .single();
 
   if (error) {
@@ -45,32 +25,7 @@ export const updateApplicationStatus = async (
     throw error;
   }
 
-  if (!data) {
-    throw new Error(`Failed to update application with ID ${applicationId}`);
-  }
-
-  const defaultProfile = {
-    first_name: "",
-    last_name: "",
-    email: "",
-    mobile_number: "",
-    gender: "",
-    postcode: "",
-    years_experience: "",
-    cleaning_types: [],
-    experience_description: "",
-    desired_hours_per_week: 0,
-    available_days: [],
-    commitment_length: ""
-  };
-
-  // Transform the response to match the expected format
-  return {
-    ...data,
-    cleaner_profile: Array.isArray(data.cleaner_profile) && data.cleaner_profile.length > 0
-      ? data.cleaner_profile[0]
-      : defaultProfile
-  };
+  return data;
 };
 
 export const updateGoogleMeetLink = async (applicationId: string, meetLink: string) => {
@@ -80,20 +35,12 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
     .from("application_process")
     .update({ google_meet_link: meetLink })
     .eq("id", applicationId)
-    .select(`
-      id,
-      google_meet_link,
-      cleaner_profile:cleaner_profiles(id)
-    `)
+    .select()
     .single();
 
   if (error) {
     console.error("Error updating Google Meet link:", error);
     throw error;
-  }
-
-  if (!data) {
-    throw new Error(`Failed to update Google Meet link for application ${applicationId}`);
   }
 
   return data;
