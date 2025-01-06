@@ -13,6 +13,25 @@ export const updateApplicationStatus = async (
     ...(interviewDate && { interview_date: interviewDate }),
   };
 
+  // First check if the application exists
+  const { data: existingApp, error: checkError } = await supabase
+    .from("application_process")
+    .select("id")
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Error checking application:", checkError);
+    throw checkError;
+  }
+
+  if (!existingApp) {
+    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
+    console.error(notFoundError);
+    throw notFoundError;
+  }
+
+  // If application exists, proceed with update
   const { data, error } = await supabase
     .from("application_process")
     .update(updateData)
@@ -41,14 +60,8 @@ export const updateApplicationStatus = async (
     .maybeSingle();
 
   if (error) {
-    console.error("Error updating application status:", error);
+    console.error("Error updating application:", error);
     throw error;
-  }
-
-  if (!data) {
-    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
-    console.error(notFoundError);
-    throw notFoundError;
   }
 
   const defaultProfile = {
@@ -66,20 +79,36 @@ export const updateApplicationStatus = async (
     commitment_length: ""
   };
 
-  // Handle case where cleaner_profile might be null or an empty array
-  const cleanerProfile = Array.isArray(data.cleaner_profile) && data.cleaner_profile.length > 0
-    ? data.cleaner_profile[0]
-    : defaultProfile;
-
   return {
     ...data,
-    cleaner_profile: cleanerProfile
+    cleaner_profile: Array.isArray(data?.cleaner_profile) && data.cleaner_profile.length > 0
+      ? data.cleaner_profile[0]
+      : defaultProfile
   };
 };
 
 export const updateGoogleMeetLink = async (applicationId: string, meetLink: string) => {
   console.log("Updating Google Meet link:", { applicationId, meetLink });
   
+  // First check if the application exists
+  const { data: existingApp, error: checkError } = await supabase
+    .from("application_process")
+    .select("id")
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error("Error checking application:", checkError);
+    throw checkError;
+  }
+
+  if (!existingApp) {
+    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
+    console.error(notFoundError);
+    throw notFoundError;
+  }
+
+  // If application exists, proceed with update
   const { data, error } = await supabase
     .from("application_process")
     .update({ google_meet_link: meetLink })
@@ -90,12 +119,6 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
   if (error) {
     console.error("Error updating Google Meet link:", error);
     throw error;
-  }
-
-  if (!data) {
-    const notFoundError = new Error(`Application with ID ${applicationId} not found`);
-    console.error(notFoundError);
-    throw notFoundError;
   }
 
   return data;
