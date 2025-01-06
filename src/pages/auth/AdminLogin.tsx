@@ -6,6 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
 
+interface RoleData {
+  name: string;
+}
+
+interface UserRoleResponse {
+  role_id: RoleData;
+}
+
 const AdminLogin = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -19,7 +27,9 @@ const AdminLogin = () => {
           .eq('user_id', session.user.id)
           .single();
 
-        if (userRoles?.role_id?.name === 'admin') {
+        const roleData = userRoles as UserRoleResponse;
+
+        if (roleData?.role_id?.name === 'admin') {
           navigate("/admin/applications");
         } else {
           toast.error("Access denied. Admin privileges required.");

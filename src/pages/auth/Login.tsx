@@ -6,6 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
 
+interface RoleData {
+  name: string;
+}
+
+interface UserRoleResponse {
+  role_id: RoleData;
+}
+
 const Login = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
@@ -19,7 +27,9 @@ const Login = () => {
           .eq('user_id', session.user.id)
           .single();
 
-        if (userRoles?.role_id?.name === 'admin') {
+        const roleData = userRoles as UserRoleResponse;
+
+        if (roleData?.role_id?.name === 'admin') {
           toast.error("Please use the admin portal to login");
           await supabase.auth.signOut();
           navigate("/auth/admin-login");
