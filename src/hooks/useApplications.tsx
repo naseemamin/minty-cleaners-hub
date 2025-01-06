@@ -132,6 +132,10 @@ export const useApplications = () => {
         }
 
         console.log("Calendar event created successfully:", data);
+        
+        // Immediately invalidate and refetch the applications query
+        await queryClient.invalidateQueries({ queryKey: ["applications"] });
+        
         return { applicationId, date, meetLink: data.meetLink };
       } catch (error) {
         console.error("Error in scheduleInterview:", error);
@@ -167,6 +171,9 @@ export const useApplications = () => {
         .eq("id", applicationId);
 
       if (error) throw error;
+      
+      // Immediately invalidate and refetch the applications query
+      await queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
