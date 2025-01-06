@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Application } from "@/types/applications";
+import type { Application, ApplicationStatus } from "@/types/applications";
 import { updateApplicationStatus, updateGoogleMeetLink } from "@/services/interviewService";
 import { createGoogleMeetEvent } from "@/services/googleCalendarService";
 
@@ -43,7 +43,7 @@ export const useApplications = () => {
       }
 
       console.log("Fetched applications:", data);
-      return data;
+      return data as Application[];
     },
   });
 
@@ -96,7 +96,7 @@ export const useApplications = () => {
       notes,
     }: {
       applicationId: string;
-      status: Application["status"];
+      status: ApplicationStatus;
       notes?: string;
     }) => {
       const { error } = await supabase

@@ -1,8 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { ApplicationStatus } from "@/types/applications";
 
 export const updateApplicationStatus = async (
   applicationId: string,
-  status: "scheduled_interview" | "verified" | "rejected",
+  status: ApplicationStatus,
   interviewDate?: string
 ) => {
   console.log("Updating application status:", { applicationId, status, interviewDate });
@@ -16,7 +17,27 @@ export const updateApplicationStatus = async (
     .from("application_process")
     .update(updateData)
     .eq("id", applicationId)
-    .select()
+    .select(`
+      id,
+      status,
+      interview_date,
+      interview_notes,
+      created_at,
+      cleaner_profile:cleaner_profiles(
+        first_name,
+        last_name,
+        email,
+        mobile_number,
+        gender,
+        postcode,
+        years_experience,
+        cleaning_types,
+        experience_description,
+        desired_hours_per_week,
+        available_days,
+        commitment_length
+      )
+    `)
     .single();
 
   if (error) {
