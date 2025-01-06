@@ -82,11 +82,25 @@ export const useApplications = () => {
           status: "scheduled_interview"
         });
         
+        // First, let's verify we can read the current application
+        const { data: currentApp, error: readError } = await supabase
+          .from("application_process")
+          .select("*")
+          .eq("id", applicationId)
+          .single();
+          
+        if (readError) {
+          console.error("Error reading current application:", readError);
+          throw readError;
+        }
+        
+        console.log("Current application state:", currentApp);
+        
         // Update the application status and date
         const { data: updateData, error: updateError } = await supabase
           .from("application_process")
           .update({
-            status: "scheduled_interview",
+            status: "scheduled_interview" as const,
             interview_date: date.toISOString(),
           })
           .eq("id", applicationId)
@@ -97,7 +111,7 @@ export const useApplications = () => {
           throw updateError;
         }
 
-        console.log("Application status updated successfully:", updateData);
+        console.log("Application update response:", updateData);
         
         // Create the Google Meet event
         const { data: calendarData, error: calendarError } = await supabase.functions.invoke(
@@ -133,7 +147,8 @@ export const useApplications = () => {
           .update({
             google_meet_link: calendarData.meetLink,
           })
-          .eq("id", applicationId);
+          .eq("id", applicationId)
+          .select();
 
         if (linkUpdateError) {
           console.error("Error updating meet link:", linkUpdateError);
