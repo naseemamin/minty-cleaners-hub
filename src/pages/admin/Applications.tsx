@@ -85,24 +85,60 @@ const AdminApplications = () => {
       try {
         console.log("Starting interview scheduling process...");
         
-        // First, update the database
-        const { data: updatedApplication, error: dbError } = await supabase
+        // First, check if an application process entry exists
+        const { data: existingApplication, error: checkError } = await supabase
           .from("application_process")
-          .update({
-            status: "scheduled_interview",
-            interview_date: date.toISOString(),
-          })
-          .eq("id", applicationId)
           .select()
+          .eq("id", applicationId)
           .maybeSingle();
 
-        if (dbError) {
-          console.error("Database update error:", dbError);
-          throw dbError;
+        if (checkError) {
+          console.error("Error checking application:", checkError);
+          throw checkError;
+        }
+
+        let updatedApplication;
+        
+        if (!existingApplication) {
+          // If no entry exists, create one first
+          const { data: insertedApp, error: insertError } = await supabase
+            .from("application_process")
+            .insert({
+              id: applicationId,
+              status: "scheduled_interview",
+              interview_date: date.toISOString(),
+            })
+            .select()
+            .maybeSingle();
+
+          if (insertError) {
+            console.error("Error inserting application:", insertError);
+            throw insertError;
+          }
+          
+          updatedApplication = insertedApp;
+        } else {
+          // If entry exists, update it
+          const { data: updatedApp, error: updateError } = await supabase
+            .from("application_process")
+            .update({
+              status: "scheduled_interview",
+              interview_date: date.toISOString(),
+            })
+            .eq("id", applicationId)
+            .select()
+            .maybeSingle();
+
+          if (updateError) {
+            console.error("Error updating application:", updateError);
+            throw updateError;
+          }
+          
+          updatedApplication = updatedApp;
         }
 
         if (!updatedApplication) {
-          throw new Error("Application not found or update failed");
+          throw new Error("Failed to update application process");
         }
 
         console.log("Database updated successfully:", updatedApplication);
