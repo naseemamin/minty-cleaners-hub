@@ -94,11 +94,15 @@ const AdminApplications = () => {
           })
           .eq("id", applicationId)
           .select()
-          .single();
+          .maybeSingle();
 
         if (dbError) {
           console.error("Database update error:", dbError);
           throw dbError;
+        }
+
+        if (!updatedApplication) {
+          throw new Error("Application not found or update failed");
         }
 
         console.log("Database updated successfully:", updatedApplication);
