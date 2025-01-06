@@ -38,7 +38,7 @@ export const updateApplicationStatus = async (
         commitment_length
       )
     `)
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error updating application:", error);
@@ -85,7 +85,7 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
       google_meet_link,
       cleaner_profile:cleaner_profiles(id)
     `)
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error updating Google Meet link:", error);
