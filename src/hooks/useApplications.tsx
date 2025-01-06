@@ -76,23 +76,28 @@ export const useApplications = () => {
       date: Date;
     }) => {
       try {
-        console.log("Starting interview scheduling process...");
+        console.log("Starting interview scheduling process...", {
+          applicationId,
+          date: date.toISOString(),
+          status: "scheduled_interview"
+        });
         
         // Update the application status and date
-        const { error: updateError } = await supabase
+        const { data: updateData, error: updateError } = await supabase
           .from("application_process")
           .update({
             status: "scheduled_interview",
             interview_date: date.toISOString(),
           })
-          .eq("id", applicationId);
+          .eq("id", applicationId)
+          .select();
 
         if (updateError) {
           console.error("Error updating application:", updateError);
           throw updateError;
         }
 
-        console.log("Application status updated successfully");
+        console.log("Application status updated successfully:", updateData);
         
         // Create the Google Meet event
         const { data: calendarData, error: calendarError } = await supabase.functions.invoke(
