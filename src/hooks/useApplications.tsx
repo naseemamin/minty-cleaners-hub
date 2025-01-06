@@ -105,14 +105,16 @@ export const useApplications = () => {
           }
         );
 
-        if (functionResponse.error) {
-          console.error("Error creating calendar event:", functionResponse.error);
+        // Clone the response data before reading it
+        const responseData = structuredClone(functionResponse);
+
+        if (responseData.error) {
+          console.error("Error creating calendar event:", responseData.error);
           throw new Error("Failed to create calendar event");
         }
 
-        const meetData = functionResponse.data;
-        console.log("Calendar event created successfully:", meetData);
-        return { applicationId, date, meetData };
+        console.log("Calendar event created successfully:", responseData.data);
+        return { applicationId, date, meetData: responseData.data };
       } catch (error) {
         console.error("Error in scheduleInterview:", error);
         throw error;
