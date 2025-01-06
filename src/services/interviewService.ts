@@ -38,7 +38,7 @@ export const updateApplicationStatus = async (
         commitment_length
       )
     `)
-    .maybeSingle();
+    .single();
 
   if (error) {
     console.error("Error updating application status:", error);

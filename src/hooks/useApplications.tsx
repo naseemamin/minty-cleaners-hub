@@ -20,7 +20,7 @@ export const useApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profile:cleaner_profiles!inner(
+          cleaner_profile:cleaner_profiles(
             first_name,
             last_name,
             email,
@@ -45,7 +45,22 @@ export const useApplications = () => {
       // Transform the data to match the Application type
       const transformedData = data.map(app => ({
         ...app,
-        cleaner_profile: app.cleaner_profile[0] // Take the first item from the array
+        cleaner_profile: Array.isArray(app.cleaner_profile) && app.cleaner_profile.length > 0
+          ? app.cleaner_profile[0]
+          : {
+              first_name: "",
+              last_name: "",
+              email: "",
+              mobile_number: "",
+              gender: "",
+              postcode: "",
+              years_experience: "",
+              cleaning_types: [],
+              experience_description: "",
+              desired_hours_per_week: 0,
+              available_days: [],
+              commitment_length: ""
+            }
       }));
 
       console.log("Fetched applications:", transformedData);
