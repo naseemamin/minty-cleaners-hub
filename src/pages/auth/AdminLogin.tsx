@@ -11,7 +11,10 @@ interface RoleData {
 }
 
 interface UserRoleResponse {
-  role_id: RoleData;
+  data: {
+    role_id: RoleData;
+  } | null;
+  error: Error | null;
 }
 
 const AdminLogin = () => {
@@ -21,15 +24,18 @@ const AdminLogin = () => {
   useEffect(() => {
     const checkAdminRole = async () => {
       if (session?.user) {
-        const { data: userRoles } = await supabase
+        const { data: userRoles, error } = await supabase
           .from('user_roles')
           .select('role_id(name)')
           .eq('user_id', session.user.id)
           .single();
 
-        const roleData = userRoles as UserRoleResponse;
+        if (error) {
+          console.error('Error checking admin role:', error);
+          return;
+        }
 
-        if (roleData?.role_id?.name === 'admin') {
+        if (userRoles?.role_id?.name === 'admin') {
           navigate("/admin/applications");
         } else {
           toast.error("Access denied. Admin privileges required.");
