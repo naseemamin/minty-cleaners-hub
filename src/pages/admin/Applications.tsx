@@ -77,42 +77,47 @@ const AdminApplications = () => {
       applicationId: string;
       date: Date;
     }) => {
-      // First, update the database
-      const { error: dbError } = await supabase
-        .from("application_process")
-        .update({
-          status: "scheduled_interview",
-          interview_date: date.toISOString(),
-        })
-        .eq("id", applicationId);
+      try {
+        // First, update the database
+        const { error: dbError } = await supabase
+          .from("application_process")
+          .update({
+            status: "scheduled_interview",
+            interview_date: date.toISOString(),
+          })
+          .eq("id", applicationId);
 
-      if (dbError) throw dbError;
+        if (dbError) throw dbError;
 
-      // Then, create the calendar event
-      console.log("Invoking create-google-meet function...");
-      const { data: functionData, error: functionError } = await supabase.functions.invoke(
-        "create-google-meet",
-        {
-          body: {
-            applicationId,
-            interviewDate: date.toISOString(),
-          },
+        // Then, create the calendar event
+        console.log("Invoking create-google-meet function...");
+        const { data: functionData, error: functionError } = await supabase.functions.invoke(
+          "create-google-meet",
+          {
+            body: {
+              applicationId,
+              interviewDate: date.toISOString(),
+            },
+          }
+        );
+
+        if (functionError) {
+          console.error("Error creating calendar event:", functionError);
+          throw new Error("Failed to create calendar event");
         }
-      );
 
-      if (functionError) {
-        console.error("Error creating calendar event:", functionError);
-        throw new Error("Failed to create calendar event");
+        console.log("Calendar event created:", functionData);
+
+        // Immediately refetch the applications to update the UI
+        await queryClient.invalidateQueries({ queryKey: ["applications"] });
+        
+        return { applicationId, date, functionData };
+      } catch (error) {
+        console.error("Error in scheduleInterview:", error);
+        throw error;
       }
-
-      console.log("Calendar event created:", functionData);
-      
-      // Return the updated application data
-      return { applicationId, date, functionData };
     },
     onSuccess: () => {
-      // Invalidate and refetch the applications query to update the UI
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
       toast.success("Interview scheduled successfully");
       setSelectedApplication(null);
     },
