@@ -46,26 +46,29 @@ export const updateApplicationStatus = async (
   }
 
   if (!data) {
+    console.error(`Application with ID ${applicationId} not found`);
     throw new Error(`Application with ID ${applicationId} not found`);
   }
+
+  const defaultProfile = {
+    first_name: "",
+    last_name: "",
+    email: "",
+    mobile_number: "",
+    gender: "",
+    postcode: "",
+    years_experience: "",
+    cleaning_types: [],
+    experience_description: "",
+    desired_hours_per_week: 0,
+    available_days: [],
+    commitment_length: ""
+  };
 
   // Handle case where cleaner_profile might be null or an empty array
   const cleanerProfile = Array.isArray(data.cleaner_profile) && data.cleaner_profile.length > 0
     ? data.cleaner_profile[0]
-    : {
-        first_name: "",
-        last_name: "",
-        email: "",
-        mobile_number: "",
-        gender: "",
-        postcode: "",
-        years_experience: "",
-        cleaning_types: [],
-        experience_description: "",
-        desired_hours_per_week: 0,
-        available_days: [],
-        commitment_length: ""
-      };
+    : defaultProfile;
 
   return {
     ...data,
