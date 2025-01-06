@@ -78,7 +78,7 @@ export const useApplications = () => {
       try {
         console.log("Starting interview scheduling process...");
         
-        // First update the application status, date, and set status to scheduled_interview
+        // First update the application status and date
         const { error: updateError } = await supabase
           .from("application_process")
           .update({
