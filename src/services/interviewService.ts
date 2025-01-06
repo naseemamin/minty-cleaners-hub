@@ -23,7 +23,7 @@ export const updateApplicationStatus = async (
       interview_date,
       interview_notes,
       created_at,
-      cleaner_profile:cleaner_profiles!inner(
+      cleaner_profile:cleaner_profiles(
         first_name,
         last_name,
         email,
@@ -49,12 +49,32 @@ export const updateApplicationStatus = async (
     throw new Error(`Application with ID ${applicationId} not found`);
   }
 
+  // Handle case where cleaner_profile might be null or an empty array
+  const cleanerProfile = Array.isArray(data.cleaner_profile) 
+    ? data.cleaner_profile[0] 
+    : data.cleaner_profile;
+
+  if (!cleanerProfile) {
+    console.warn(`No cleaner profile found for application ${applicationId}`);
+  }
+
   console.log("Application status updated:", data);
   return {
     ...data,
-    cleaner_profile: Array.isArray(data.cleaner_profile) 
-      ? data.cleaner_profile[0] 
-      : data.cleaner_profile
+    cleaner_profile: cleanerProfile || {
+      first_name: "",
+      last_name: "",
+      email: "",
+      mobile_number: "",
+      gender: "",
+      postcode: "",
+      years_experience: "",
+      cleaning_types: [],
+      experience_description: "",
+      desired_hours_per_week: 0,
+      available_days: [],
+      commitment_length: ""
+    }
   };
 };
 
