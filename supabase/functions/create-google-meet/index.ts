@@ -6,30 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface GoogleCalendarEvent {
-  summary: string
-  description: string
-  start: {
-    dateTime: string
-    timeZone: string
-  }
-  end: {
-    dateTime: string
-    timeZone: string
-  }
-  attendees: {
-    email: string
-  }[]
-  conferenceData: {
-    createRequest: {
-      requestId: string
-      conferenceSolutionKey: {
-        type: string
-      }
-    }
-  }
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -72,7 +48,6 @@ serve(async (req) => {
     const refreshToken = Deno.env.get('GOOGLE_CALENDAR_REFRESH_TOKEN')
     const adminEmail = Deno.env.get('GMAIL_EMAIL')
 
-    // Validate all required credentials
     if (!clientId || !clientSecret || !refreshToken || !adminEmail) {
       throw new Error('Missing required Google Calendar credentials')
     }
@@ -111,7 +86,7 @@ serve(async (req) => {
       endTime: endTime.toISOString()
     })
 
-    const event: GoogleCalendarEvent = {
+    const event = {
       summary: `Interview with ${application.cleaner_profiles.first_name} ${application.cleaner_profiles.last_name}`,
       description: 'Cleaner interview for Mint Cleaning Services',
       start: {
@@ -138,7 +113,6 @@ serve(async (req) => {
 
     console.log('Calendar event payload:', event)
 
-    // Make sure to use the primary calendar and send notifications
     const calendarResponse = await fetch(
       'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all&supportsAttachments=true',
       {
@@ -174,7 +148,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ meetLink: calendarData.hangoutLink }),
+      JSON.stringify({ success: true, meetLink: calendarData.hangoutLink }),
       { 
         headers: { 
           ...corsHeaders,
@@ -186,6 +160,7 @@ serve(async (req) => {
     console.error('Error:', error)
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: error.message,
         details: error.stack
       }),
