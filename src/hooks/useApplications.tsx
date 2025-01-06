@@ -82,7 +82,7 @@ export const useApplications = () => {
         const { error: updateError } = await supabase
           .from("application_process")
           .update({
-            status: "scheduled_interview",
+            status: "scheduled_interview" as ApplicationStatus,
             interview_date: date.toISOString(),
           })
           .eq("id", applicationId);
@@ -107,7 +107,28 @@ export const useApplications = () => {
 
         if (error || !data.success) {
           console.error("Error creating calendar event:", error || data.error);
+          // If calendar creation fails, revert the status update
+          await supabase
+            .from("application_process")
+            .update({
+              status: "pending_review" as ApplicationStatus,
+              interview_date: null,
+            })
+            .eq("id", applicationId);
           throw new Error(data.error || "Failed to create calendar event");
+        }
+
+        // Update the application with the Google Meet link
+        const { error: linkUpdateError } = await supabase
+          .from("application_process")
+          .update({
+            google_meet_link: data.meetLink,
+          })
+          .eq("id", applicationId);
+
+        if (linkUpdateError) {
+          console.error("Error updating meet link:", linkUpdateError);
+          throw linkUpdateError;
         }
 
         console.log("Calendar event created successfully:", data);
