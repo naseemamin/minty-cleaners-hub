@@ -38,7 +38,7 @@ export const updateApplicationStatus = async (
         commitment_length
       )
     `)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error updating application status:", error);
@@ -50,31 +50,26 @@ export const updateApplicationStatus = async (
   }
 
   // Handle case where cleaner_profile might be null or an empty array
-  const cleanerProfile = Array.isArray(data.cleaner_profile) 
-    ? data.cleaner_profile[0] 
-    : data.cleaner_profile;
+  const cleanerProfile = Array.isArray(data.cleaner_profile) && data.cleaner_profile.length > 0
+    ? data.cleaner_profile[0]
+    : {
+        first_name: "",
+        last_name: "",
+        email: "",
+        mobile_number: "",
+        gender: "",
+        postcode: "",
+        years_experience: "",
+        cleaning_types: [],
+        experience_description: "",
+        desired_hours_per_week: 0,
+        available_days: [],
+        commitment_length: ""
+      };
 
-  if (!cleanerProfile) {
-    console.warn(`No cleaner profile found for application ${applicationId}`);
-  }
-
-  console.log("Application status updated:", data);
   return {
     ...data,
-    cleaner_profile: cleanerProfile || {
-      first_name: "",
-      last_name: "",
-      email: "",
-      mobile_number: "",
-      gender: "",
-      postcode: "",
-      years_experience: "",
-      cleaning_types: [],
-      experience_description: "",
-      desired_hours_per_week: 0,
-      available_days: [],
-      commitment_length: ""
-    }
+    cleaner_profile: cleanerProfile
   };
 };
 
@@ -97,6 +92,5 @@ export const updateGoogleMeetLink = async (applicationId: string, meetLink: stri
     throw new Error(`Application with ID ${applicationId} not found`);
   }
 
-  console.log("Google Meet link updated:", data);
   return data;
 };
