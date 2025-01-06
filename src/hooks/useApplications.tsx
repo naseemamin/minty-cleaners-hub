@@ -20,7 +20,7 @@ export const useApplications = () => {
           interview_date,
           interview_notes,
           created_at,
-          cleaner_profile:cleaner_profiles(
+          cleaner_profile:cleaner_profiles!inner(
             first_name,
             last_name,
             email,
@@ -42,8 +42,14 @@ export const useApplications = () => {
         throw error;
       }
 
-      console.log("Fetched applications:", data);
-      return data as Application[];
+      // Transform the data to match the Application type
+      const transformedData = data.map(app => ({
+        ...app,
+        cleaner_profile: app.cleaner_profile[0] // Take the first item from the array
+      }));
+
+      console.log("Fetched applications:", transformedData);
+      return transformedData as Application[];
     },
   });
 
