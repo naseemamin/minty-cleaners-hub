@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Apply from "./pages/recruit/Apply";
 import Login from "./pages/auth/Login";
+import AdminLogin from "./pages/auth/AdminLogin";
 import QuoteForm from "./pages/signup/QuoteForm";
 import AdminApplications from "./pages/admin/Applications";
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/recruit/apply" element={<Apply />} />
             <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/admin-login" element={<AdminLogin />} />
             <Route path="/signup/quote" element={<QuoteForm />} />
             <Route
               path="/admin/applications"

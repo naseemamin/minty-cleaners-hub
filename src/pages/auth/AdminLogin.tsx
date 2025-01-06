@@ -6,12 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
 
-const Login = () => {
+const AdminLogin = () => {
   const navigate = useNavigate();
   const { session } = useAuth();
 
   useEffect(() => {
-    const checkUserRole = async () => {
+    const checkAdminRole = async () => {
       if (session?.user) {
         const { data: userRoles } = await supabase
           .from('user_roles')
@@ -20,35 +20,45 @@ const Login = () => {
           .single();
 
         if (userRoles?.role_id?.name === 'admin') {
-          toast.error("Please use the admin portal to login");
+          navigate("/admin/applications");
+        } else {
+          toast.error("Access denied. Admin privileges required.");
           await supabase.auth.signOut();
           navigate("/auth/admin-login");
-        } else {
-          navigate("/");
         }
       }
     };
 
-    checkUserRole();
+    checkAdminRole();
   }, [session, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          Admin Portal
         </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          For cleaners and customers
+        <p className="mt-2 text-center text-sm text-gray-400">
+          Authorized access only
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <Auth
             supabaseClient={supabase}
-            appearance={{ theme: ThemeSupa }}
-            theme="light"
+            appearance={{ 
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: '#4F46E5',
+                    brandAccent: '#4338CA',
+                  },
+                },
+              },
+            }}
+            theme="dark"
             providers={[]}
           />
         </div>
@@ -57,4 +67,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;
