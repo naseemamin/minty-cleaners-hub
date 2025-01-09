@@ -10,24 +10,33 @@ export const useAdminCheck = () => {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
     const checkAdminRole = async () => {
       if (!session?.user?.id) {
-        if (isMounted) setIsChecking(false);
+        if (mounted) setIsChecking(false);
         return;
       }
 
       try {
-        const { data: userRoles } = await supabase
+        const { data, error } = await supabase
           .from('user_roles')
-          .select('role_id(name)')
+          .select(`
+            role_id (
+              name
+            )
+          `)
           .eq('user_id', session.user.id)
+          .limit(1)
           .maybeSingle();
 
-        if (!isMounted) return;
+        if (!mounted) return;
 
-        if (userRoles?.role_id?.name === 'admin') {
+        if (error) throw error;
+
+        const isAdmin = data?.role_id?.name === 'admin';
+
+        if (isAdmin) {
           toast.success('Welcome, admin!');
           navigate("/admin/applications");
         } else {
@@ -35,19 +44,19 @@ export const useAdminCheck = () => {
           await supabase.auth.signOut();
         }
       } catch (error) {
-        if (!isMounted) return;
+        if (!mounted) return;
         console.error('Error checking admin role:', error);
         toast.error("An unexpected error occurred");
         await supabase.auth.signOut();
       } finally {
-        if (isMounted) setIsChecking(false);
+        if (mounted) setIsChecking(false);
       }
     };
 
     checkAdminRole();
 
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, [session, navigate]);
 
