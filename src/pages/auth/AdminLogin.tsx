@@ -24,31 +24,29 @@ const AdminLogin = () => {
     // Add auth state change listener for debugging and error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
-      console.log('Session:', session);
+      console.log('Session state:', session ? 'Logged in' : 'Logged out');
       
-      if (event === 'SIGNED_IN') {
-        console.log('User signed in:', session?.user);
+      if (event === 'SIGNED_IN' && session) {
+        console.log('User signed in successfully:', session.user.email);
+        // Check admin role after successful sign in
+        checkAdminRole();
       }
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out');
-        toast.error('Invalid email or password. Please try again.');
-      }
-
-      // Log any auth errors
-      if (event === 'USER_UPDATED' && !session) {
-        const { data, error } = await supabase.auth.getSession();
-        console.error('Auth error:', error);
-        if (error) {
-          toast.error(error.message);
-        }
+        toast.error('Signed out. Please log in with admin credentials.');
       }
     });
 
     const checkAdminRole = async () => {
-      if (session?.user) {
-        console.log('Checking admin role for user:', session.user.id);
-        
+      if (!session?.user) {
+        console.log('No session found during admin role check');
+        return;
+      }
+
+      console.log('Checking admin role for user:', session.user.email);
+      
+      try {
         const { data: userRoles, error } = await supabase
           .from('user_roles')
           .select('role_id(name)')
@@ -57,7 +55,8 @@ const AdminLogin = () => {
 
         if (error) {
           console.error('Error checking admin role:', error);
-          toast.error("Error checking admin permissions");
+          toast.error("Error verifying admin permissions");
+          await supabase.auth.signOut();
           return;
         }
 
@@ -66,6 +65,7 @@ const AdminLogin = () => {
 
         if (roleData?.role_id?.name === 'admin') {
           console.log('Admin role confirmed, navigating to applications');
+          toast.success('Welcome, admin!');
           navigate("/admin/applications");
         } else {
           console.log('Not an admin, signing out');
@@ -73,10 +73,17 @@ const AdminLogin = () => {
           await supabase.auth.signOut();
           navigate("/auth/admin-login");
         }
+      } catch (error) {
+        console.error('Unexpected error during admin check:', error);
+        toast.error("An unexpected error occurred");
+        await supabase.auth.signOut();
       }
     };
 
-    checkAdminRole();
+    // Initial admin role check if session exists
+    if (session?.user) {
+      checkAdminRole();
+    }
 
     return () => {
       subscription.unsubscribe();
