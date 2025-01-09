@@ -5,7 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
-import { AuthChangeEvent, AuthError } from "@supabase/supabase-js";
+import { AuthChangeEvent } from "@supabase/supabase-js";
 
 interface RoleData {
   name: string;
@@ -35,6 +35,12 @@ const AdminLogin = () => {
       if (event === 'SIGNED_OUT') {
         console.log('User signed out');
         toast.error('Please log in with admin credentials.');
+      }
+
+      // Handle authentication errors
+      if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+        console.error('Authentication error:', event);
+        toast.error('Authentication failed. Please try again.');
       }
     });
 
@@ -91,12 +97,6 @@ const AdminLogin = () => {
     };
   }, [session, navigate]);
 
-  // Add custom error handling for the Auth component
-  const handleError = (error: AuthError) => {
-    console.error('Auth error:', error);
-    toast.error(error.message);
-  };
-
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -130,7 +130,6 @@ const AdminLogin = () => {
             }}
             theme="dark"
             providers={[]}
-            onError={handleError}
           />
         </div>
       </div>
