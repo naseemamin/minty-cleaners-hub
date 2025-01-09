@@ -19,22 +19,15 @@ export const useAdminCheck = () => {
       }
 
       try {
-        const { data, error } = await supabase
+        const { data: userRoles } = await supabase
           .from('user_roles')
           .select('role_id(name)')
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (!isMounted) return;
 
-        if (error) {
-          console.error('Error checking admin role:', error);
-          toast.error("Error verifying admin permissions");
-          await supabase.auth.signOut();
-          return;
-        }
-
-        if (data?.role_id?.name === 'admin') {
+        if (userRoles?.role_id?.name === 'admin') {
           toast.success('Welcome, admin!');
           navigate("/admin/applications");
         } else {
@@ -43,7 +36,7 @@ export const useAdminCheck = () => {
         }
       } catch (error) {
         if (!isMounted) return;
-        console.error('Unexpected error:', error);
+        console.error('Error checking admin role:', error);
         toast.error("An unexpected error occurred");
         await supabase.auth.signOut();
       } finally {
