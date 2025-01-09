@@ -25,6 +25,7 @@ const AdminLogin = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
       console.log('Session state:', session ? 'Logged in' : 'Logged out');
+      console.log('Full session data:', session); // Add this line for debugging
       
       if (event === 'SIGNED_IN' && session) {
         console.log('User signed in successfully:', session.user.email);
@@ -34,7 +35,13 @@ const AdminLogin = () => {
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out');
-        toast.error('Signed out. Please log in with admin credentials.');
+        toast.error('Please log in with admin credentials.');
+      }
+
+      // Add specific error handling for auth errors
+      if (event === 'USER_DELETED' || event === 'PASSWORD_RECOVERY') {
+        console.log('Auth event requiring attention:', event);
+        toast.error('Authentication error. Please try again.');
       }
     });
 
