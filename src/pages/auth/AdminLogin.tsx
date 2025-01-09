@@ -35,7 +35,7 @@ const AdminLogin = () => {
       }
 
       // Handle authentication errors
-      if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+      if (event === 'SIGNED_OUT') {
         toast.error('Invalid email or password. Please try again.');
       }
     });
