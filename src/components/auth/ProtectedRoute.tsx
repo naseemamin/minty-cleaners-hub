@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthProvider";
 import { toast } from "sonner";
 
+// Development mode flag
+const isDevelopment = import.meta.env.DEV;
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: string;
@@ -14,18 +17,19 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
 
   useEffect(() => {
-    // Temporarily bypass auth check for admin routes
-    if (location.pathname.startsWith('/admin')) {
-      return;
-    }
-
+    // In development mode, we'll show a warning instead of redirecting
     if (!authLoading && !session) {
-      toast.error("Please login to access this page");
-      navigate("/auth/login");
+      if (isDevelopment) {
+        console.warn("Development mode: Bypassing authentication check");
+        toast.warning("Development mode: Authentication bypassed");
+      } else {
+        toast.error("Please login to access this page");
+        navigate("/auth/login");
+      }
     }
   }, [session, authLoading, navigate, location]);
 
-  if (authLoading && !location.pathname.startsWith('/admin')) {
+  if (authLoading && !isDevelopment) {
     return <div>Loading...</div>;
   }
 
