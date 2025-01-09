@@ -22,7 +22,7 @@ const AdminLogin = () => {
 
   useEffect(() => {
     // Add auth state change listener for debugging and error handling
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth event:', event);
       console.log('Session:', session);
       
@@ -32,11 +32,16 @@ const AdminLogin = () => {
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out');
+        toast.error('Invalid email or password. Please try again.');
       }
 
-      // Handle authentication errors
-      if (event === 'SIGNED_OUT') {
-        toast.error('Invalid email or password. Please try again.');
+      // Log any auth errors
+      if (event === 'USER_UPDATED' && !session) {
+        const { data, error } = await supabase.auth.getSession();
+        console.error('Auth error:', error);
+        if (error) {
+          toast.error(error.message);
+        }
       }
     });
 
