@@ -5,7 +5,6 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
-import { AuthChangeEvent } from "@supabase/supabase-js";
 
 interface UserRoleResponse {
   role_id: {
@@ -18,51 +17,64 @@ const AdminLogin = () => {
   const { session } = useAuth();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, currentSession) => {
-      if (event === 'SIGNED_IN' && currentSession) {
-        try {
-          const { data: userRoles, error } = await supabase
-            .from('user_roles')
-            .select('role_id(name)')
-            .eq('user_id', currentSession.user.id)
-            .single();
+    let isSubscribed = true;
 
-          if (error) {
-            console.error('Error checking admin role:', error);
-            toast.error("Error verifying admin permissions");
-            await supabase.auth.signOut();
-            return;
-          }
+    const checkAdminRole = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('user_roles')
+          .select('role_id(name)')
+          .eq('user_id', userId)
+          .single();
 
-          const roleData = userRoles as UserRoleResponse;
+        if (!isSubscribed) return;
 
-          if (roleData?.role_id?.name === 'admin') {
-            console.log('Admin role confirmed');
-            toast.success('Welcome, admin!');
-            navigate("/admin/applications");
-          } else {
-            console.log('Not an admin, signing out');
-            toast.error("Access denied. Admin privileges required.");
-            await supabase.auth.signOut();
-            navigate("/auth/admin-login");
-          }
-        } catch (error) {
-          console.error('Unexpected error during admin check:', error);
-          toast.error("An unexpected error occurred");
+        if (error) {
+          console.error('Error checking admin role:', error);
+          toast.error("Error verifying admin permissions");
+          await supabase.auth.signOut();
+          return;
+        }
+
+        const roleData = data as UserRoleResponse;
+        
+        if (roleData?.role_id?.name === 'admin') {
+          toast.success('Welcome, admin!');
+          navigate("/admin/applications");
+        } else {
+          toast.error("Access denied. Admin privileges required.");
           await supabase.auth.signOut();
         }
+      } catch (error) {
+        if (!isSubscribed) return;
+        console.error('Unexpected error:', error);
+        toast.error("An unexpected error occurred");
+        await supabase.auth.signOut();
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      if (!isSubscribed) return;
+
+      if (event === 'SIGNED_IN' && currentSession?.user?.id) {
+        checkAdminRole(currentSession.user.id);
       }
       
       if (event === 'SIGNED_OUT') {
-        console.log('User signed out');
         toast.error('Please log in with admin credentials.');
       }
     });
 
+    // Check session on mount
+    if (session?.user?.id) {
+      checkAdminRole(session.user.id);
+    }
+
     return () => {
+      isSubscribed = false;
       subscription.unsubscribe();
     };
-  }, [session, navigate]);
+  }, [navigate, session]);
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
