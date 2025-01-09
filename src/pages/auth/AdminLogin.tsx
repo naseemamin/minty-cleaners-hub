@@ -37,9 +37,9 @@ const AdminLogin = () => {
         toast.error('Please log in with admin credentials.');
       }
 
-      // Handle authentication errors
-      if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
-        console.error('Authentication error:', event);
+      // Handle authentication errors - using valid AuthChangeEvent types
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
+        console.error('Authentication event:', event);
         toast.error('Authentication failed. Please try again.');
       }
     });
