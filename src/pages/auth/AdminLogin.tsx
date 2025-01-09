@@ -36,11 +36,6 @@ const AdminLogin = () => {
         console.log('User signed out');
         toast.error('Please log in with admin credentials.');
       }
-
-      if (event === 'TOKEN_REFRESHED' || event === 'PASSWORD_RECOVERY') {
-        console.log('Auth event requiring attention:', event);
-        toast.error('Authentication error. Please try again.');
-      }
     });
 
     const checkAdminRole = async () => {
@@ -58,6 +53,8 @@ const AdminLogin = () => {
           .eq('user_id', session.user.id)
           .single();
 
+        console.log('User roles query response:', { data: userRoles, error });
+
         if (error) {
           console.error('Error checking admin role:', error);
           toast.error("Error verifying admin permissions");
@@ -73,7 +70,7 @@ const AdminLogin = () => {
           toast.success('Welcome, admin!');
           navigate("/admin/applications");
         } else {
-          console.log('Not an admin, signing out');
+          console.log('Not an admin, signing out. Role data:', roleData);
           toast.error("Access denied. Admin privileges required.");
           await supabase.auth.signOut();
           navigate("/auth/admin-login");
@@ -93,6 +90,12 @@ const AdminLogin = () => {
       subscription.unsubscribe();
     };
   }, [session, navigate]);
+
+  // Add custom error handling for the Auth component
+  const handleError = (error: AuthError) => {
+    console.error('Auth error:', error);
+    toast.error(error.message);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -127,6 +130,7 @@ const AdminLogin = () => {
             }}
             theme="dark"
             providers={[]}
+            onError={handleError}
           />
         </div>
       </div>
