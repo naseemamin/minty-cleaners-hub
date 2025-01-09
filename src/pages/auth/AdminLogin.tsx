@@ -5,7 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
-import { AuthChangeEvent } from "@supabase/supabase-js";
+import { AuthChangeEvent, AuthError } from "@supabase/supabase-js";
 
 interface RoleData {
   name: string;
@@ -22,7 +22,6 @@ const AdminLogin = () => {
   const { session } = useAuth();
 
   useEffect(() => {
-    // Add auth state change listener for debugging and error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session) => {
       console.log('Auth event:', event);
       console.log('Session state:', session ? 'Logged in' : 'Logged out');
@@ -30,7 +29,6 @@ const AdminLogin = () => {
       
       if (event === 'SIGNED_IN' && session) {
         console.log('User signed in successfully:', session.user.email);
-        // Check admin role after successful sign in
         checkAdminRole();
       }
       
@@ -39,7 +37,6 @@ const AdminLogin = () => {
         toast.error('Please log in with admin credentials.');
       }
 
-      // Add specific error handling for auth errors
       if (event === 'TOKEN_REFRESHED' || event === 'PASSWORD_RECOVERY') {
         console.log('Auth event requiring attention:', event);
         toast.error('Authentication error. Please try again.');
@@ -88,7 +85,6 @@ const AdminLogin = () => {
       }
     };
 
-    // Initial admin role check if session exists
     if (session?.user) {
       checkAdminRole();
     }
