@@ -37,7 +37,7 @@ const AdminLogin = () => {
         toast.error('Please log in with admin credentials.');
       }
 
-      // Handle authentication errors - using valid AuthChangeEvent types
+      // Handle authentication errors
       if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
         console.error('Authentication event:', event);
         toast.error('Authentication failed. Please try again.');
