@@ -5,6 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
+import { AuthError } from "@supabase/supabase-js";
 
 interface RoleData {
   name: string;
@@ -21,8 +22,24 @@ const AdminLogin = () => {
   const { session } = useAuth();
 
   useEffect(() => {
+    // Add auth state change listener for debugging
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event);
+      console.log('Session:', session);
+      
+      if (event === 'SIGNED_IN') {
+        console.log('User signed in:', session?.user);
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        console.log('User signed out');
+      }
+    });
+
     const checkAdminRole = async () => {
       if (session?.user) {
+        console.log('Checking admin role for user:', session.user.id);
+        
         const { data: userRoles, error } = await supabase
           .from('user_roles')
           .select('role_id(name)')
@@ -31,14 +48,18 @@ const AdminLogin = () => {
 
         if (error) {
           console.error('Error checking admin role:', error);
+          toast.error("Error checking admin permissions");
           return;
         }
 
+        console.log('User roles data:', userRoles);
         const roleData = userRoles as UserRoleResponse;
 
         if (roleData?.role_id?.name === 'admin') {
+          console.log('Admin role confirmed, navigating to applications');
           navigate("/admin/applications");
         } else {
+          console.log('Not an admin, signing out');
           toast.error("Access denied. Admin privileges required.");
           await supabase.auth.signOut();
           navigate("/auth/admin-login");
@@ -47,7 +68,20 @@ const AdminLogin = () => {
     };
 
     checkAdminRole();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [session, navigate]);
+
+  const handleAuthError = async (error: AuthError) => {
+    console.error('Auth error:', error);
+    if (error.message.includes('Invalid login credentials')) {
+      toast.error('Invalid email or password. Please try again.');
+    } else {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -58,6 +92,11 @@ const AdminLogin = () => {
         <p className="mt-2 text-center text-sm text-gray-400">
           Authorized access only
         </p>
+        <div className="mt-2 text-center text-sm text-gray-400">
+          <p>Test account:</p>
+          <p>Email: admin@test.com</p>
+          <p>Password: password123</p>
+        </div>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -77,6 +116,7 @@ const AdminLogin = () => {
             }}
             theme="dark"
             providers={[]}
+            onError={handleAuthError}
           />
         </div>
       </div>
