@@ -5,7 +5,6 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { toast } from "sonner";
-import { AuthError } from "@supabase/supabase-js";
 
 interface RoleData {
   name: string;
@@ -22,7 +21,7 @@ const AdminLogin = () => {
   const { session } = useAuth();
 
   useEffect(() => {
-    // Add auth state change listener for debugging
+    // Add auth state change listener for debugging and error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('Auth event:', event);
       console.log('Session:', session);
@@ -33,6 +32,11 @@ const AdminLogin = () => {
       
       if (event === 'SIGNED_OUT') {
         console.log('User signed out');
+      }
+
+      // Handle authentication errors
+      if (event === 'USER_DELETED' || event === 'SIGNED_OUT') {
+        toast.error('Invalid email or password. Please try again.');
       }
     });
 
@@ -74,15 +78,6 @@ const AdminLogin = () => {
     };
   }, [session, navigate]);
 
-  const handleAuthError = async (error: AuthError) => {
-    console.error('Auth error:', error);
-    if (error.message.includes('Invalid login credentials')) {
-      toast.error('Invalid email or password. Please try again.');
-    } else {
-      toast.error(error.message);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -116,7 +111,6 @@ const AdminLogin = () => {
             }}
             theme="dark"
             providers={[]}
-            onError={handleAuthError}
           />
         </div>
       </div>
